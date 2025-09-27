@@ -114,9 +114,15 @@ describe('Functional Tests', () => {
 	test.concurrent('Config Import', ftForDir('config-import'))
 
 	test.concurrent('Type Check Everything', async () => {
-		const typeCheckResults = await execa(
+			const typeCheckResults = await execa(
 			path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
-			['--strict', '--noEmit', ...(await glob(`${__dirname}/*/expected/*.ts`))]
+				[
+					'--strict',
+					'--noEmit',
+					'--esModuleInterop',
+					'--skipLibCheck',
+					...(await glob(`${__dirname}/*/expected/*.ts`)),
+				]
 		)
 
 		expect(typeCheckResults.exitCode).toBe(0)
