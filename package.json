@@ -24,7 +24,8 @@
     "build": "tsup src/index.ts --format cjs --dts --clean --out-dir dist --target node14",
     "lint": "tsc --noEmit",
     "prepublish": "tsup src/index.ts --format cjs --dts --clean --out-dir dist --target node14",
-    "test": "node --version && tsc --noEmit"
+    "test": "node --version && tsc --noEmit",
+    "postinstall": "lefthook install"
   },
   "prettier": {
     "printWidth": 100,
@@ -59,7 +60,7 @@
     "execa": "^5.1.0",
     "fast-glob": "^3.2.5",
     "fs-extra": "^10.0.0",
-    "husky": "^7.0.4",
+    "lefthook": "^1.7.6",
     "jest-mock-extended": "^2.0.4",
     "prisma": "^3.4.2",
     "tslib": "^2.3.1",
