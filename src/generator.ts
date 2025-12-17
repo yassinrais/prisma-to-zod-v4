@@ -13,7 +13,12 @@ import { getJSDocs, computeCustomSchema } from "./docs"
 import { getZodConstructor } from "./types"
 
 export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, string>> => {
-  const schemaContent = readFileSync(schemaPath, "utf-8")
+	const fullSchemaPath = schemaPath.endsWith('schema.prisma') 
+    ? schemaPath 
+    : path.join(schemaPath, 'schema.prisma')
+  
+  const schemaContent = readFileSync(fullSchemaPath, "utf-8")
+
   const nativeTypes = new Map<string, Map<string, string>>()
 
   // Regex to match model blocks and their fields with @db attributes
@@ -167,8 +172,12 @@ export const generateSchemaForModel = (
   { schemaPath }: PrismaOptions,
 ) => {
   const { modelName } = useModelNames(config)
-  const nativeTypes = parseNativeTypes(schemaPath)
-  const modelNativeTypes = nativeTypes.get(model.name) || new Map()
+ const actualSchemaPath = schemaPath.includes('schema.prisma') 
+    ? schemaPath 
+    : path.join(schemaPath, 'schema.prisma')
+    
+	const nativeTypes = parseNativeTypes(actualSchemaPath)
+	const modelNativeTypes = nativeTypes.get(model.name) || new Map()
 
   sourceFile.addVariableStatement({
     declarationKind: VariableDeclarationKind.Const,
