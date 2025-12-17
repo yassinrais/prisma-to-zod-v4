@@ -1,6 +1,6 @@
 {
 	"name": "prisma-to-zod-v4",
-	"version": "0.5.7",
+	"version": "0.5.8",
 	"description": "A Prisma generator that creates Zod schemas for all of your models",
 	"license": "MIT",
 	"author": "yassinrais",
@@ -27,9 +27,9 @@
 		"dist"
 	],
 	"scripts": {
-		"build": "bun build src/index.ts --format cjs --dts --clean --outdir dist/ --target node",
+		"build": "bunx tsup src/index.ts --format cjs --dts --clean --out-dir dist --target node14",
 		"lint": "tsc --noEmit",
-		"prepublish": "bun build src/index.ts --format cjs --dts --clean --outdir dist/ --target node",
+		"prepublish": "bunx tsup src/index.ts --format cjs --dts --clean --out-dir dist --target node14",
 		"test": "bun test --timeout 10000",
 		"postinstall": "lefthook install"
 	},

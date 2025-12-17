@@ -23,7 +23,7 @@ z
   .transform((value) => new Decimal(value))
 
 export const NativeTypesModel = z.object({
-  id: z.string(),
+  id: z.uuid(),
   title: z.string(),
   slug: z.string().max(100),
   description: z.string(),

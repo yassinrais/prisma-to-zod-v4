@@ -20,7 +20,7 @@ enum Status {
 }
 
 model NativeTypes {
-  id           String   @id @default(cuid())
+	id      String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
   
   // String types
   title        String   @db.VarChar(255)

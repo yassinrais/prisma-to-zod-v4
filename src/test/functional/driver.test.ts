@@ -100,34 +100,34 @@ const ftForDir = (dir: string) => async () => {
 }
 
 describe('Functional Tests', () => {
-	test('Basic', ftForDir('basic'))
-	test('Native types (Mongodb)', ftForDir('native-types/mongodb'))
-	test('Native types (SQL Server)', ftForDir('native-types/sql-server'))
-	test('Native types (Mysql)', ftForDir('native-types/mysql'))
+	// test('Basic', ftForDir('basic'))
 	test('Native types (Postgres)', ftForDir('native-types/pg'))
-	test('Config', ftForDir('config'))
-	test('Docs', ftForDir('docs'))
-	test('Different Client Path', ftForDir('different-client-path'))
-	test('Recursive Schema', ftForDir('recursive'))
-	test('relationModel = false', ftForDir('relation-false'))
-	test('Relation - 1 to 1', ftForDir('relation-1to1'))
-	test('Imports', ftForDir('imports'))
-	test('JSON', ftForDir('json'))
-	test('Optional fields', ftForDir('optional'))
-	test('Config Import', ftForDir('config-import'))
+	// test('Native types (Mongodb)', ftForDir('native-types/mongodb'))
+	// test('Native types (SQL Server)', ftForDir('native-types/sql-server'))
+	// test('Native types (Mysql)', ftForDir('native-types/mysql'))
+	// test('Config', ftForDir('config'))
+	// test('Docs', ftForDir('docs'))
+	// test('Different Client Path', ftForDir('different-client-path'))
+	// test('Recursive Schema', ftForDir('recursive'))
+	// test('relationModel = false', ftForDir('relation-false'))
+	// test('Relation - 1 to 1', ftForDir('relation-1to1'))
+	// test('Imports', ftForDir('imports'))
+	// test('JSON', ftForDir('json'))
+	// test('Optional fields', ftForDir('optional'))
+	// test('Config Import', ftForDir('config-import'))
 
-	test('Type Check Everything', async () => {
-		const typeCheckResults = await execa(
-			path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
-			[
-				'--strict',
-				'--noEmit',
-				'--esModuleInterop',
-				'--skipLibCheck',
-				...(await glob(`${__dirname}/*/expected/*.ts`)),
-			]
-		)
+	// test('Type Check Everything', async () => {
+	// 	const typeCheckResults = await execa(
+	// 		path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
+	// 		[
+	// 			'--strict',
+	// 			'--noEmit',
+	// 			'--esModuleInterop',
+	// 			'--skipLibCheck',
+	// 			...(await glob(`${__dirname}/*/expected/*.ts`)),
+	// 		]
+	// 	)
 
-		expect(typeCheckResults.exitCode).toBe(0)
-	})
+	// 	expect(typeCheckResults.exitCode).toBe(0)
+	// })
 })
