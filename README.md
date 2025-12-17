@@ -115,17 +115,17 @@ This project uses pnpm.
 0.  **Ensure your tsconfig.json enables the compiler's strict mode.**
     **Zod requires it and so do we, you will experience TS errors without strict mode enabled**
 
-1.  Add zod-prisma-v4 as a dev dependency
+1.  Add prisma-to-zod-v4 as a dev dependency
 
     ```sh
-    pnpm add -D zod-prisma-v4
+    pnpm add -D prisma-to-zod-v4
     ```
 
-2.  Add the zod-prisma-v4 generator to your schema.prisma
+2.  Add the prisma-to-zod-v4 generator to your schema.prisma
 
     ```prisma
     generator zod {
-      provider                 = "zod-prisma-v4"
+      provider                 = "prisma-to-zod-v4"
       output                   = "./zod" // (default) the directory where generated zod schemas will be saved
 
       relationModel            = true // (default) Create and export both plain and related models.
@@ -225,7 +225,7 @@ export const PostModel = z.object({
 ### Importing Helpers
 
 Sometimes its useful to define a custom Zod preprocessor or transformer for your data.
-zod-prisma-v4 enables you to reuse these by importing them via a config options. For example:
+prisma-to-zod-v4 enables you to reuse these by importing them via a config options. For example:
 
 ```prisma
 generator zod {
@@ -257,7 +257,7 @@ By specifying the custom schema within the parentheses you can replace the autog
 ### JSON Fields
 
 JSON fields in Prisma disallow null values. This is to disambiguate between setting a field's value to NULL in the database and having
-a value of null stored in the JSON. In accordance with this zod-prisma-v4 will default to disallowing null values, even if your JSON field is optional.
+a value of null stored in the JSON. In accordance with this prisma-to-zod-v4 will default to disallowing null values, even if your JSON field is optional.
 
 If you would like to revert this behavior and allow null assignment to JSON fields,
 you can set `prismaJsonNullability` to `false` in the generator options.
