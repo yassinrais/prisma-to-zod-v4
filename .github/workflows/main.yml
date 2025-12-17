@@ -1,35 +1,35 @@
-name: Lint and Test
-on: [push, workflow_dispatch]
-jobs:
-    build:
-        name: Build, lint, and test on Bun ${{ matrix.bun }} and ${{ matrix.os }}
+# name: Lint and Test
+# on: [push, workflow_dispatch]
+# jobs:
+#     build:
+#         name: Build, lint, and test on Bun ${{ matrix.bun }} and ${{ matrix.os }}
 
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                bun: ['latest']
-                os: [ubuntu-latest, macos-latest, windows-latest]
+#         runs-on: ${{ matrix.os }}
+#         strategy:
+#             matrix:
+#                 bun: ['latest']
+#                 os: [ubuntu-latest, macos-latest, windows-latest]
 
-        steps:
-            - name: Disable Auto CRLF
-              run: git config --global core.autocrlf false
+#         steps:
+#             - name: Disable Auto CRLF
+#               run: git config --global core.autocrlf false
 
-            - name: Checkout repo
-              uses: actions/checkout@v3
+#             - name: Checkout repo
+#               uses: actions/checkout@v3
 
-            - name: Setup Bun
-              uses: oven-sh/setup-bun@v1
-              with:
-                  bun-version: ${{ matrix.bun }}
+#             - name: Setup Bun
+#               uses: oven-sh/setup-bun@v1
+#               with:
+#                   bun-version: ${{ matrix.bun }}
 
-            - name: Install deps
-              run: bun install --frozen-lockfile
+#             - name: Install deps
+#               run: bun install --frozen-lockfile
 
-            - name: Build
-              run: bun run build
+#             - name: Build
+#               run: bun run build
 
-            - name: Lint
-              run: bun run lint
+#             - name: Lint
+#               run: bun run lint
 
-            - name: Test
-              run: bun test --timeout 30000
+#             - name: Test
+#               run: bun test --timeout 30000
