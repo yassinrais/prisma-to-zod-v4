@@ -1,0 +1,58 @@
+datasource db {
+  provider = "mongodb"
+  url      = ""
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = ".client"
+}
+
+generator zod {
+  provider = "zod-prisma"
+  output   = "../actual/"
+}
+
+model NativeTypes {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // String types
+  title        String
+  description  String?
+  slug         String   @unique
+  
+  // ObjectId reference
+  userId       String   @db.ObjectId
+  
+  // Integer types
+  count        Int
+  views        Int      @default(0)
+  
+  // Numeric types
+  rating       Float
+  
+  // DateTime types
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  publishedAt  DateTime?
+  expiresAt    DateTime?
+  
+  // Boolean
+  isActive     Boolean  @default(true)
+  isPublished  Boolean  @default(false)
+  
+  // Bytes
+  signature    Bytes?
+  
+  // JSON/Object (MongoDB native)
+  metadata     Json
+  config       Json?
+  
+  // Arrays
+  tags         String[]
+  ratings      Int[]
+  flags        Boolean[]
+  
+  // String for status (MongoDB doesn't support enums)
+  status       String   @default("ACTIVE")
+}

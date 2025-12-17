@@ -37,7 +37,7 @@ model Presentation {
 }
 
 model Spreadsheet {
-  id       String @id @default(cuid())
+  id			 String @id
   filename String @unique
   author   String
   contents Json

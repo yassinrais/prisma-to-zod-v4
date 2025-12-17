@@ -1,12 +1,14 @@
-import { mock } from 'jest-mock-extended'
 import path from 'path'
-import type { CodeBlockWriter } from 'ts-morph'
+import { describe, test, expect, mock } from 'bun:test'
 import { dotSlash, writeArray } from '../util'
 
 describe('Util Package', () => {
 	test('writeArray: default newLines', () => {
 		const arrayToWrite = ['this', 'is', 'a', 'line']
-		const writer = mock<CodeBlockWriter>()
+		const writer = {
+			write: mock(() => undefined),
+			conditionalNewLine: mock(() => undefined),
+		} as any
 
 		writer.write.mockReturnValue(writer)
 
@@ -27,7 +29,10 @@ describe('Util Package', () => {
 
 	test('writeArray: no newLines', () => {
 		const arrayToWrite = ['this', 'is', 'a', 'line']
-		const writer = mock<CodeBlockWriter>()
+		const writer = {
+			write: mock(() => undefined),
+			conditionalNewLine: mock(() => undefined),
+		} as any
 
 		writer.write.mockReturnValue(writer)
 

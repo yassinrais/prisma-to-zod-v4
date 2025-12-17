@@ -6,10 +6,45 @@ import {
   StructureKind,
   VariableDeclarationKind,
 } from "ts-morph"
+import {readFileSync} from 'fs';
 import { Config, PrismaOptions } from "./config"
 import { dotSlash, needsRelatedModel, useModelNames, writeArray } from "./util"
 import { getJSDocs, computeCustomSchema } from "./docs"
 import { getZodConstructor } from "./types"
+
+export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, string>> => {
+  const schemaContent = readFileSync(schemaPath, "utf-8")
+  const nativeTypes = new Map<string, Map<string, string>>()
+
+  // Regex to match model blocks and their fields with @db attributes
+  const modelRegex = /model\s+(\w+)\s*\{([^}]+)\}/g
+  const fieldRegex = /(\w+)\s+(\w+(?:\[\])?)\s+([^;\n]+)/g
+
+  let modelMatch
+  while ((modelMatch = modelRegex.exec(schemaContent)) !== null) {
+    const modelName = modelMatch[1]
+    const modelBody = modelMatch[2]
+    const fields = new Map<string, string>()
+
+    let fieldMatch
+    while ((fieldMatch = fieldRegex.exec(modelBody)) !== null) {
+      const fieldName = fieldMatch[1]
+      const fieldLine = fieldMatch[0]
+      
+      // Extract @db.* attribute
+      const dbMatch = fieldLine.match(/@db\.(\w+(?:\([^)]*\))?)/)?.[1]
+      if (dbMatch) {
+        fields.set(fieldName, dbMatch)
+      }
+    }
+
+    if (fields.size > 0) {
+      nativeTypes.set(modelName, fields)
+    }
+  }
+
+  return nativeTypes
+}
 
 export const writeImportsForModel = (
   model: DMMF.Model,
@@ -129,9 +164,11 @@ export const generateSchemaForModel = (
   model: DMMF.Model,
   sourceFile: SourceFile,
   config: Config,
-  _prismaOptions: PrismaOptions,
+  { schemaPath }: PrismaOptions,
 ) => {
   const { modelName } = useModelNames(config)
+  const nativeTypes = parseNativeTypes(schemaPath)
+  const modelNativeTypes = nativeTypes.get(model.name) || new Map()
 
   sourceFile.addVariableStatement({
     declarationKind: VariableDeclarationKind.Const,
@@ -148,8 +185,9 @@ export const generateSchemaForModel = (
                 .filter((f) => f.kind !== "object")
                 .forEach((field) => {
                   writeArray(writer, getJSDocs(field.documentation))
+                  const nativeType = modelNativeTypes.get(field.name)
                   writer
-                    .write(`${field.name}: ${getZodConstructor(field)}`)
+                    .write(`${field.name}: ${getZodConstructor(field, undefined, nativeType)}`)
                     .write(",")
                     .newLine()
                 })
@@ -160,6 +198,7 @@ export const generateSchemaForModel = (
     ],
   })
 }
+
 
 export const generateRelatedSchemaForModel = (
   model: DMMF.Model,

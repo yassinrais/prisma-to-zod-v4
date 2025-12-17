@@ -1,0 +1,69 @@
+datasource db {
+  provider = "postgresql"
+  url      = ""
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = ".client"
+}
+
+generator zod {
+  provider = "zod-prisma"
+  output   = "../actual/"
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+model NativeTypes {
+  id           String   @id @default(cuid())
+  
+  // String types
+  title        String   @db.VarChar(255)
+  slug         String   @db.Char(100)
+  description  String   @db.Text
+  uuid         String   @db.Uuid
+  citext       String   @db.Citext
+  bitfield     String   @db.Bit(32)
+  
+  // Integer types
+  count        Int
+  smallNumber  Int      @db.SmallInt
+  bigNumber    BigInt
+  
+  // Numeric types
+  price        Decimal  @db.Decimal(10, 2)
+  rating       Float    @db.Real
+  accurate     Float    @db.DoublePrecision
+  
+  // DateTime types
+  publishedAt  DateTime @db.Timestamptz()
+  scheduledFor DateTime @db.Timestamp()
+  eventDate    DateTime @db.Date
+  eventTime    DateTime @db.Time()
+  eventTimeTz  DateTime @db.Timetz()
+  
+  // Boolean & Bytes
+  isActive     Boolean  @default(true)
+  signature    Bytes    @db.ByteA
+  
+  // JSON types
+  metadata     Json     @db.JsonB
+  config       Json     @db.Json
+  
+  // Array types
+  tags         String[]
+  ratings      Int[]
+  flags        Boolean[]
+  
+  // Enum
+  status       Status   @default(ACTIVE)
+  
+  // Timestamps
+  created      DateTime @default(now())
+  updated      DateTime @updatedAt
+}

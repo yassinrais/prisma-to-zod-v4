@@ -1,14 +1,13 @@
 import glob from 'fast-glob'
-import execa from 'execa'
+import { execa } from 'execa'
 import { getDMMF, getConfig } from '@prisma/sdk'
 import { readFile } from 'fs-extra'
 import path from 'path'
 import { Project } from 'ts-morph'
 import { SemicolonPreference } from 'typescript'
+import { describe, test, expect } from 'bun:test'
 import { configSchema, PrismaOptions } from '../../config'
 import { populateModelFile, generateBarrelFile } from '../../generator'
-
-jest.setTimeout(10000)
 
 const ftForDir = (dir: string) => async () => {
 	const schemaFile = path.resolve(__dirname, dir, 'prisma/schema.prisma')
@@ -101,28 +100,32 @@ const ftForDir = (dir: string) => async () => {
 }
 
 describe('Functional Tests', () => {
-	test.concurrent('Basic', ftForDir('basic'))
-	test.concurrent('Config', ftForDir('config'))
-	test.concurrent('Docs', ftForDir('docs'))
-	test.concurrent('Different Client Path', ftForDir('different-client-path'))
-	test.concurrent('Recursive Schema', ftForDir('recursive'))
-	test.concurrent('relationModel = false', ftForDir('relation-false'))
-	test.concurrent('Relation - 1 to 1', ftForDir('relation-1to1'))
-	test.concurrent('Imports', ftForDir('imports'))
-	test.concurrent('JSON', ftForDir('json'))
-	test.concurrent('Optional fields', ftForDir('optional'))
-	test.concurrent('Config Import', ftForDir('config-import'))
+	test('Basic', ftForDir('basic'))
+	test('Native types (Mongodb)', ftForDir('native-types/mongodb'))
+	test('Native types (SQL Server)', ftForDir('native-types/sql-server'))
+	test('Native types (Mysql)', ftForDir('native-types/mysql'))
+	test('Native types (Postgres)', ftForDir('native-types/pg'))
+	test('Config', ftForDir('config'))
+	test('Docs', ftForDir('docs'))
+	test('Different Client Path', ftForDir('different-client-path'))
+	test('Recursive Schema', ftForDir('recursive'))
+	test('relationModel = false', ftForDir('relation-false'))
+	test('Relation - 1 to 1', ftForDir('relation-1to1'))
+	test('Imports', ftForDir('imports'))
+	test('JSON', ftForDir('json'))
+	test('Optional fields', ftForDir('optional'))
+	test('Config Import', ftForDir('config-import'))
 
-	test.concurrent('Type Check Everything', async () => {
-			const typeCheckResults = await execa(
+	test('Type Check Everything', async () => {
+		const typeCheckResults = await execa(
 			path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
-				[
-					'--strict',
-					'--noEmit',
-					'--esModuleInterop',
-					'--skipLibCheck',
-					...(await glob(`${__dirname}/*/expected/*.ts`)),
-				]
+			[
+				'--strict',
+				'--noEmit',
+				'--esModuleInterop',
+				'--skipLibCheck',
+				...(await glob(`${__dirname}/*/expected/*.ts`)),
+			]
 		)
 
 		expect(typeCheckResults.exitCode).toBe(0)

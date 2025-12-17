@@ -1,0 +1,58 @@
+datasource db {
+  provider = "sqlserver"
+  url      = ""
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = ".client"
+}
+
+generator zod {
+  provider = "zod-prisma"
+  output   = "../actual/"
+}
+
+model NativeTypes {
+  id           String   @id @default(cuid())
+  
+  // String types
+  title        String   @db.NVarChar(255)
+  charField    String   @db.NChar(100)
+  description  String   @db.NText
+  varchar      String   @db.VarChar(255)
+  char         String   @db.Char(100)
+  text         String   @db.Text
+  
+  // Integer types
+  count        Int
+  tinyInt      Int      @db.TinyInt
+  smallInt     Int      @db.SmallInt
+  bigNumber    BigInt
+  
+  // Numeric types
+  price        Decimal  @db.Decimal(10, 2)
+  floatVal     Float    @db.Real
+  doubleVal    Float
+  
+  // DateTime types
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  dateOnly     DateTime @db.Date
+  timeOnly     DateTime @db.Time
+  dateTime     DateTime @db.DateTime
+  dateTime2    DateTime @db.DateTime2
+  smallDt      DateTime @db.SmallDateTime
+  dateTimeOffset DateTime @db.DateTimeOffset
+  
+  // Boolean
+  isActive     Boolean  @default(true)
+  
+  // Bytes
+  binaryData   Bytes    @db.Binary(255)
+  varbinary    Bytes    @db.VarBinary(1000)
+  image        Bytes    @db.Image
+  
+  // String as status (SQL Server doesn't support enums)
+  status       String   @db.VarChar(50)
+}

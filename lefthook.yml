@@ -2,12 +2,12 @@ pre-commit:
   parallel: true
   commands:
     lint:
-      run: pnpm lint --fix
+      run: bun run lint
 
 pre-push:
   parallel: true
   commands:
     test:
-      run: pnpm test
+      run: bun run test
 
 

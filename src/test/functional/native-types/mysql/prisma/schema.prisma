@@ -1,0 +1,73 @@
+datasource db {
+  provider = "mysql"
+  url      = ""
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = ".client"
+}
+
+generator zod {
+  provider = "zod-prisma"
+  output   = "../actual/"
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+model NativeTypes {
+  id           String   @id @default(cuid())
+  
+  // String types
+  title        String   @db.VarChar(255)
+  charField    String   @db.Char(100)
+  description  String   @db.Text
+  tinyText     String   @db.TinyText
+  mediumText   String   @db.MediumText
+  longText     String   @db.LongText
+  
+  // Integer types
+  count        Int
+  tinyInt      Int      @db.TinyInt
+  smallInt     Int      @db.SmallInt
+  mediumInt    Int      @db.MediumInt
+  bigNumber    BigInt   @db.BigInt
+  
+  // Unsigned integers
+  unsignedInt  Int      @db.UnsignedInt
+  unsignedBig  BigInt   @db.UnsignedBigInt
+  
+  // Numeric types
+  price        Decimal  @db.Decimal(10, 2)
+  floatVal     Float    @db.Float
+  doubleVal    Float    @db.Double
+  
+  // DateTime types
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  dateOnly     DateTime @db.Date
+  timeOnly     DateTime @db.Time
+  timestamp    DateTime @db.Timestamp
+  
+  // Boolean
+  isActive     Boolean  @default(true)
+  
+  // Bytes
+  binaryData   Bytes    @db.Binary(255)
+  varbinary    Bytes    @db.VarBinary(1000)
+  tinyBlob     Bytes    @db.TinyBlob
+  blob         Bytes    @db.Blob
+  mediumBlob   Bytes    @db.MediumBlob
+  longBlob     Bytes    @db.LongBlob
+  
+  // JSON
+  metadata     Json
+  config       Json
+  
+  // Enum
+  status       Status   @default(ACTIVE)
+}
