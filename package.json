@@ -27,9 +27,9 @@
 		"dist"
 	],
 	"scripts": {
-		"build": "tsup src/index.ts --format cjs --dts --clean --out-dir dist --target node14",
+		"build": "bun build src/index.ts --format cjs --dts --clean --outdir dist/ --target node",
 		"lint": "tsc --noEmit",
-		"prepublish": "tsup src/index.ts --format cjs --dts --clean --out-dir dist --target node14",
+		"prepublish": "bun build src/index.ts --format cjs --dts --clean --outdir dist/ --target node",
 		"test": "bun test --timeout 10000",
 		"postinstall": "lefthook install"
 	},

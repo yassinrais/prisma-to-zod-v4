@@ -17,7 +17,7 @@ export type Config = z.infer<typeof configSchema>
 export type PrismaOptions = {
   schemaPath: string
   clientPath: string
-  outputPath?: string | null
+	outputPath: string
 }
 
 export type Names = {
