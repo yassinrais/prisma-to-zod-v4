@@ -1,22 +1,50 @@
-import glob from 'fast-glob'
-import { execa } from 'execa'
-import { getDMMF, getConfig } from '@prisma/sdk'
-import { readFile } from 'fs-extra'
-import path from 'path'
-import { Project } from 'ts-morph'
-import { SemicolonPreference } from 'typescript'
-import { describe, test, expect } from 'bun:test'
-import { configSchema, PrismaOptions } from '../../config'
-import { populateModelFile, generateBarrelFile } from '../../generator'
+import { getConfig, getDMMF } from '@prisma/sdk';
+import { describe, expect, test } from 'bun:test';
+import { execa } from 'execa';
+import glob from 'fast-glob';
+import { readdirSync, readFile } from 'fs-extra';
+import path from 'path';
+import { Project } from 'ts-morph';
+import { SemicolonPreference } from 'typescript';
+import { configSchema, PrismaOptions } from '../../config';
+import { generateBarrelFile, populateModelFile } from '../../generator';
+
+/**
+ * Read all .prisma files from a directory and combine them
+ */
+const readAllPrismaFiles = async (prismaDir: string): Promise<string> => {
+	const files = readdirSync(prismaDir).filter(f => f.endsWith('.prisma'))
+	let combined = ''
+
+	for (const file of files) {
+		let content = await readFile(path.join(prismaDir, file), 'utf-8')
+
+		// Skip schema.prisma for now, we'll add it first
+		if (file !== 'schema.prisma') {
+			// Remove datasource/generator/import blocks from non-main files
+			content = content.replace(/datasource\s+\w+\s*\{[^}]*\}/g, '')
+			content = content.replace(/generator\s+\w+\s*\{[^}]*\}/g, '')
+			content = content.replace(/import\s+["'].*?["']/g, '')
+
+			combined += content + '\n'
+		}
+	}
+
+	// Add schema.prisma first (with datasource/generator)
+	const schemaContent = await readFile(path.join(prismaDir, 'schema.prisma'), 'utf-8')
+	return schemaContent + '\n' + combined
+}
+
 
 const ftForDir = (dir: string) => async () => {
-	const schemaFile = path.resolve(__dirname, dir, 'prisma/schema.prisma')
+	const schemaDir = path.resolve(__dirname, dir, 'prisma')
 	const expectedDir = path.resolve(__dirname, dir, 'expected')
 	const actualDir = path.resolve(__dirname, dir, 'actual')
 
 	const project = new Project()
 
-	const datamodel = await readFile(schemaFile, 'utf-8')
+	// Read all .prisma files (handles multiple schema files)
+	const datamodel = await readAllPrismaFiles(schemaDir)
 
 	const dmmf = await getDMMF({
 		datamodel,
@@ -33,18 +61,22 @@ const ftForDir = (dir: string) => async () => {
 		(generator) => generator.provider.value === 'prisma-client-js'
 	)!
 
-	const outputPath = path.resolve(path.dirname(schemaFile), generator.output!.value)
-	const clientPath = path.resolve(path.dirname(schemaFile), prismaClient.output!.value)
+	const outputPath = path.resolve(schemaDir, generator.output!.value)
+	const clientPath = path.resolve(schemaDir, prismaClient.output!.value)
 
 	const prismaOptions: PrismaOptions = {
 		clientPath,
 		outputPath,
-		schemaPath: schemaFile,
+		schemaPath: schemaDir,
 	}
 
-	const indexFile = project.createSourceFile(`${outputPath}/index.ts`, {}, { overwrite: true })
+	const indexFile = project.createSourceFile(
+		path.join(outputPath, 'index.ts'),
+		{},
+		{ overwrite: true }
+	)
 
-	generateBarrelFile(dmmf.datamodel.models, indexFile)
+	generateBarrelFile(dmmf.datamodel.models as never, indexFile)
 
 	indexFile.formatText({
 		indentSize: 2,
@@ -54,25 +86,22 @@ const ftForDir = (dir: string) => async () => {
 
 	await indexFile.save()
 
-	const actualIndexContents = await readFile(`${actualDir}/index.ts`, 'utf-8')
+	const actualIndexContents = await readFile(path.join(actualDir, 'index.ts'), 'utf-8')
 
-	const expectedIndexFile = path.resolve(expectedDir, `index.ts`)
-	const expectedIndexContents = await readFile(
-		path.resolve(expectedDir, expectedIndexFile),
-		'utf-8'
-	)
+	const expectedIndexFile = path.resolve(expectedDir, 'index.ts')
+	const expectedIndexContents = await readFile(expectedIndexFile, 'utf-8')
 
 	expect(actualIndexContents).toStrictEqual(expectedIndexContents)
 
 	await Promise.all(
 		dmmf.datamodel.models.map(async (model) => {
 			const sourceFile = project.createSourceFile(
-				`${actualDir}/${model.name.toLowerCase()}.ts`,
+				path.join(actualDir, `${model.name.toLowerCase()}.ts`),
 				{},
 				{ overwrite: true }
 			)
 
-			populateModelFile(model, sourceFile, config, prismaOptions)
+			populateModelFile(model as never, sourceFile, config, prismaOptions)
 
 			sourceFile.formatText({
 				indentSize: 2,
@@ -82,15 +111,12 @@ const ftForDir = (dir: string) => async () => {
 
 			await sourceFile.save()
 			const actualContents = await readFile(
-				`${actualDir}/${model.name.toLowerCase()}.ts`,
+				path.join(actualDir, `${model.name.toLowerCase()}.ts`),
 				'utf-8'
 			)
 
 			const expectedFile = path.resolve(expectedDir, `${model.name.toLowerCase()}.ts`)
-			const expectedContents = await readFile(
-				path.resolve(expectedDir, expectedFile),
-				'utf-8'
-			)
+			const expectedContents = await readFile(expectedFile, 'utf-8')
 
 			expect(actualContents).toStrictEqual(expectedContents)
 		})
@@ -100,34 +126,35 @@ const ftForDir = (dir: string) => async () => {
 }
 
 describe('Functional Tests', () => {
-	// test('Basic', ftForDir('basic'))
+	test('Multiple Schema', ftForDir('multiple-schema'))
+	test('Basic', ftForDir('basic'))
 	test('Native types (Postgres)', ftForDir('native-types/pg'))
-	// test('Native types (Mongodb)', ftForDir('native-types/mongodb'))
-	// test('Native types (SQL Server)', ftForDir('native-types/sql-server'))
-	// test('Native types (Mysql)', ftForDir('native-types/mysql'))
-	// test('Config', ftForDir('config'))
-	// test('Docs', ftForDir('docs'))
-	// test('Different Client Path', ftForDir('different-client-path'))
-	// test('Recursive Schema', ftForDir('recursive'))
-	// test('relationModel = false', ftForDir('relation-false'))
-	// test('Relation - 1 to 1', ftForDir('relation-1to1'))
-	// test('Imports', ftForDir('imports'))
-	// test('JSON', ftForDir('json'))
-	// test('Optional fields', ftForDir('optional'))
-	// test('Config Import', ftForDir('config-import'))
+	test('Native types (Mongodb)', ftForDir('native-types/mongodb'))
+	test('Native types (SQL Server)', ftForDir('native-types/sql-server'))
+	test('Native types (Mysql)', ftForDir('native-types/mysql'))
+	test('Config', ftForDir('config'))
+	test('Docs', ftForDir('docs'))
+	test('Different Client Path', ftForDir('different-client-path'))
+	test('Recursive Schema', ftForDir('recursive'))
+	test('relationModel = false', ftForDir('relation-false'))
+	test('Relation - 1 to 1', ftForDir('relation-1to1'))
+	test('Imports', ftForDir('imports'))
+	test('JSON', ftForDir('json'))
+	test('Optional fields', ftForDir('optional'))
+	test('Config Import', ftForDir('config-import'))
 
-	// test('Type Check Everything', async () => {
-	// 	const typeCheckResults = await execa(
-	// 		path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
-	// 		[
-	// 			'--strict',
-	// 			'--noEmit',
-	// 			'--esModuleInterop',
-	// 			'--skipLibCheck',
-	// 			...(await glob(`${__dirname}/*/expected/*.ts`)),
-	// 		]
-	// 	)
+	test('Type Check Everything', async () => {
+		const typeCheckResults = await execa(
+			path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
+			[
+				'--strict',
+				'--noEmit',
+				'--esModuleInterop',
+				'--skipLibCheck',
+				...(await glob(`${__dirname}/*/expected/*.ts`)),
+			]
+		)
 
-	// 	expect(typeCheckResults.exitCode).toBe(0)
-	// })
+		expect(typeCheckResults.exitCode).toBe(0)
+	})
 })

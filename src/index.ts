@@ -3,6 +3,7 @@ import { version } from '../package.json'
 
 import { generatorHandler } from '@prisma/generator-helper'
 import { SemicolonPreference } from 'typescript'
+import path from 'path'
 import { configSchema, PrismaOptions } from './config'
 import { populateModelFile, generateBarrelFile } from './generator'
 import { Project } from 'ts-morph'
@@ -20,7 +21,10 @@ generatorHandler({
 
 		const models = [...options.dmmf.datamodel.models]
 
-		const { schemaPath } = options
+		const schemaPath = options.schemaPath
+		// Get the directory containing the schema file(s)
+		const schemaDir = path.dirname(schemaPath)
+		
 		const outputPath = options.generator.output!.value!
 		const clientPath = options.otherGenerators.find(
 			(each) => each.provider.value === 'prisma-client-js'
@@ -36,7 +40,7 @@ generatorHandler({
 		const prismaOptions: PrismaOptions = {
 			clientPath,
 			outputPath,
-			schemaPath,
+			schemaPath: schemaDir, // Pass the directory, not the file
 		}
 
 		const indexFile = project.createSourceFile(

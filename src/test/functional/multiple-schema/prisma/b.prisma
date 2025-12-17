@@ -1,0 +1,19 @@
+model Presentation {
+  id       String   @id @default(cuid())
+  filename String   @unique
+  author   String
+  contents String[]
+
+  created DateTime @default(now())
+  updated DateTime @default(now())
+}
+
+model Spreadsheet {
+  id			 String @id
+  filename String @unique
+  author   String
+  contents Json
+
+  created DateTime @default(now())
+  updated DateTime @default(now())
+}
