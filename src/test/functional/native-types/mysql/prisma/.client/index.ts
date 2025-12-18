@@ -1,5 +1,5 @@
-export enum Status { 
-	ACTIVE  = 'ACTIVE',
-  INACTIVE  = 'INACTIVE',
-	PENDING  = 'PENDING'
+export enum Status {
+	ACTIVE = "ACTIVE",
+	INACTIVE = "INACTIVE",
+	PENDING = "PENDING",
 }

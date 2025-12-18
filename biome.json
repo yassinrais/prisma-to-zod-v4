@@ -1,67 +1,67 @@
 {
-  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "formatter": {
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100,
-    "ignore": [
-      "**/dist/**",
-      "**/node_modules/**",
-      "**/tooling/**",
-      ".next",
-      "**/nango-integrations/**"
-    ]
-  },
-  "organizeImports": {
-    "enabled": true
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "a11y": {
-        "noSvgWithoutTitle": "off",
-        "useMediaCaption": "off",
-        "useGenericFontNames": "off"
-      },
-      "correctness": {
-        "useExhaustiveDependencies": "off"
-      },
-      "style": {
-        "noNonNullAssertion": "off",
-        "useBlockStatements": "off",
-        "useImportType": "off"
-      },
-      "suspicious": {
-        "noExplicitAny": "off",
-        "noArrayIndexKey": "off"
-      }
-    },
-    "ignore": ["node_modules", ".next", "src/test/**"]
-  },
-  "files": {
-    "maxSize": 5242880,
-    "ignore": ["**/dist/**", "src/test/**"]
-  },
-  "javascript": {
-    "formatter": {
-      "jsxQuoteStyle": "double",
-      "quoteProperties": "asNeeded",
-      "trailingCommas": "all",
-      "semicolons": "asNeeded",
-      "arrowParentheses": "always",
-      "bracketSpacing": true,
-      "bracketSameLine": false,
-      "quoteStyle": "double",
-      "attributePosition": "auto"
-    }
-  },
-  "overrides": [
-    {
-      "include": ["*.ts", "*.tsx"],
-      "formatter": {
-        "enabled": true
-      }
-    }
-  ]
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"formatter": {
+		"indentStyle": "space",
+		"indentWidth": 2,
+		"lineWidth": 100,
+		"ignore": [
+			"**/dist/**",
+			"**/node_modules/**",
+			"**/tooling/**",
+			".next",
+			"**/nango-integrations/**"
+		]
+	},
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"a11y": {
+				"noSvgWithoutTitle": "off",
+				"useMediaCaption": "off",
+				"useGenericFontNames": "off"
+			},
+			"correctness": {
+				"useExhaustiveDependencies": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off",
+				"useBlockStatements": "off",
+				"useImportType": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noArrayIndexKey": "off"
+			}
+		},
+		"ignore": ["node_modules", ".next", "src/test/**"]
+	},
+	"files": {
+		"maxSize": 5242880,
+		"ignore": ["**/dist/**", "src/test/**"]
+	},
+	"javascript": {
+		"formatter": {
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "all",
+			"semicolons": "asNeeded",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"bracketSameLine": false,
+			"quoteStyle": "double",
+			"attributePosition": "auto"
+		}
+	},
+	"overrides": [
+		{
+			"include": ["*.ts", "*.tsx"],
+			"formatter": {
+				"enabled": true
+			}
+		}
+	]
 }

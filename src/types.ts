@@ -15,73 +15,66 @@ export const getZodConstructor = (
 			case 'String':
 				zodType = 'z.string()'
 				// PostgreSQL
-				if (nativeType?.includes('Uuid')) zodType = 'z.uuid()'
-				if (nativeType?.includes('Citext')) zodType = 'z.string().toLowerCase()'
-				if (nativeType?.includes('Char')) {
-					const length = nativeType.match(/Char\((\d+)\)/)?.[1]
-					if (length) extraModifiers.push(`max(${length})`)
-				}
-				if (nativeType?.includes('VarChar')) {
+				if (nativeType?.match(/^Uuid/)) zodType = 'z.uuid()'
+				else if (nativeType?.match(/^Citext/)) zodType = 'z.string().toLowerCase()'
+				else if (nativeType?.match(/^VarChar\(\d+\)/)) {
 					const length = nativeType.match(/VarChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
 				}
-				if (nativeType?.includes('Text')) zodType = 'z.string()'
-				if (nativeType?.includes('Bit')) zodType = 'z.string()'
-				if (nativeType?.includes('VarBit')) zodType = 'z.string()'
-				// MySQL
-				if (nativeType?.includes('VarBinary')) zodType = 'z.unknown()'
-				if (nativeType?.includes('Binary')) zodType = 'z.unknown()'
-				// SQL Server
-				if (nativeType?.includes('NChar')) {
-					const length = nativeType.match(/NChar\((\d+)\)/)?.[1]
+				else if (nativeType?.match(/^Char\(\d+\)/)) {
+					const length = nativeType.match(/Char\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
 				}
-				if (nativeType?.includes('NVarChar')) {
+				else if (nativeType?.match(/^Text/)) zodType = 'z.string()'
+				else if (nativeType?.match(/^VarBit/)) zodType = 'z.string()'
+				else if (nativeType?.match(/^Bit/)) zodType = 'z.string()'
+				// MySQL
+				else if (nativeType?.match(/^VarBinary/)) zodType = 'z.unknown()'
+				else if (nativeType?.match(/^Binary/)) zodType = 'z.unknown()'
+				// SQL Server
+				else if (nativeType?.match(/^NVarChar\(\d+\)/)) {
 					const length = nativeType.match(/NVarChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
 				}
-				if (nativeType?.includes('NText')) zodType = 'z.string()'
+				else if (nativeType?.match(/^NChar\(\d+\)/)) {
+					const length = nativeType.match(/NChar\((\d+)\)/)?.[1]
+					if (length) extraModifiers.push(`max(${length})`)
+				}
+				else if (nativeType?.match(/^NText/)) zodType = 'z.string()'
 				// MongoDB
-				if (nativeType?.includes('ObjectId')) extraModifiers.push('regex(/^[0-9a-f]{24}$/i)')
+				else if (nativeType?.match(/^ObjectId/)) extraModifiers.push('regex(/^[0-9a-f]{24}$/i)')
 				break
 
 			case 'Int':
 				zodType = 'z.number()'
 				extraModifiers.push('int()')
 				// PostgreSQL
-				if (nativeType?.includes('SmallInt')) extraModifiers.push('min(-32768)', 'max(32767)')
+				if (nativeType?.match(/^SmallInt/)) extraModifiers.push('min(-32768)', 'max(32767)')
 				// MySQL
-				if (nativeType?.includes('TinyInt')) extraModifiers.push('min(-128)', 'max(127)')
-				if (nativeType?.includes('UnsignedTinyInt')) extraModifiers.push('min(0)', 'max(255)')
-				if (nativeType?.includes('UnsignedSmallInt')) extraModifiers.push('min(0)', 'max(65535)')
-				if (nativeType?.includes('UnsignedInt')) extraModifiers.push('min(0)')
-				// SQL Server
-				if (nativeType?.includes('Int')) zodType = 'z.number().int()'
+				else if (nativeType?.match(/^UnsignedInt/)) extraModifiers.push('min(0)')
+				else if (nativeType?.match(/^UnsignedSmallInt/)) extraModifiers.push('min(0)', 'max(65535)')
+				else if (nativeType?.match(/^UnsignedTinyInt/)) extraModifiers.push('min(0)', 'max(255)')
+				else if (nativeType?.match(/^TinyInt/)) extraModifiers.push('min(-128)', 'max(127)')
 				break
 
 			case 'BigInt':
 				zodType = 'z.bigint()'
-				// PostgreSQL
-				if (nativeType?.includes('BigInt')) zodType = 'z.bigint()'
 				break
 
 			case 'Float':
 				zodType = 'z.number()'
-				if (nativeType?.includes('Real')) zodType = 'z.number()'
-				if (nativeType?.includes('Float')) zodType = 'z.number()'
-				if (nativeType?.includes('Double')) zodType = 'z.number()'
 				break
 
 			case 'Decimal':
 				zodType = 'z.number()'
-				if (nativeType?.includes('Numeric')) {
+				if (nativeType?.match(/^Numeric\(\d+,\d+\)/)) {
 					const match = nativeType.match(/Numeric\((\d+),(\d+)\)/)
 					if (match) {
 						const [, precision, scale] = match
 						extraModifiers.push(`refine(x => /^\\d{1,${Number(precision) - parseInt(scale)}}(\\.\\d{1,${scale}})?$/.test(x.toString()))`)
 					}
 				}
-				if (nativeType?.includes('Decimal')) {
+				else if (nativeType?.match(/^Decimal\(\d+,\d+\)/)) {
 					const match = nativeType.match(/Decimal\((\d+),(\d+)\)/)
 					if (match) {
 						const [, precision, scale] = match
@@ -93,16 +86,16 @@ export const getZodConstructor = (
 			case 'DateTime':
 				zodType = 'z.date()'
 				// PostgreSQL
-				if (nativeType?.includes('Timestamp')) zodType = 'z.date()'
-				if (nativeType?.includes('TimestampTz')) zodType = 'z.date()'
-				if (nativeType?.includes('Date')) zodType = 'z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/)'
-				if (nativeType?.includes('Time')) zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}$/)'
-				if (nativeType?.includes('TimeTz')) zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$/)'
+				if (nativeType?.match(/^TimestampTz/)) zodType = 'z.date()'
+				else if (nativeType?.match(/^Timestamp/)) zodType = 'z.date()'
+				else if (nativeType?.match(/^TimeTz/)) zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$/)'
+				else if (nativeType?.match(/^Time/)) zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}$/)'
+				else if (nativeType?.match(/^Date/)) zodType = 'z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/)'
 				// MySQL
-				if (nativeType?.includes('DateTime')) zodType = 'z.date()'
+				else if (nativeType?.match(/^DateTime/)) zodType = 'z.date()'
 				// SQL Server
-				if (nativeType?.includes('DateTime2')) zodType = 'z.date()'
-				if (nativeType?.includes('DateTimeOffset')) zodType = 'z.date()'
+				else if (nativeType?.match(/^DateTimeOffset/)) zodType = 'z.date()'
+				else if (nativeType?.match(/^DateTime2/)) zodType = 'z.date()'
 				break
 
 			case 'Boolean':
@@ -112,25 +105,20 @@ export const getZodConstructor = (
 			case 'Bytes':
 				zodType = 'z.instanceof(Buffer)'
 				// PostgreSQL
-				if (nativeType?.includes('ByteA')) zodType = 'z.instanceof(Buffer)'
+				if (nativeType?.match(/^ByteA/)) zodType = 'z.instanceof(Buffer)'
 				// MySQL
-				if (nativeType?.includes('Blob')) zodType = 'z.instanceof(Buffer)'
-				if (nativeType?.includes('TinyBlob')) zodType = 'z.instanceof(Buffer)'
-				if (nativeType?.includes('MediumBlob')) zodType = 'z.instanceof(Buffer)'
-				if (nativeType?.includes('LongBlob')) zodType = 'z.instanceof(Buffer)'
+				else if (nativeType?.match(/^LongBlob/)) zodType = 'z.instanceof(Buffer)'
+				else if (nativeType?.match(/^MediumBlob/)) zodType = 'z.instanceof(Buffer)'
+				else if (nativeType?.match(/^TinyBlob/)) zodType = 'z.instanceof(Buffer)'
+				else if (nativeType?.match(/^Blob/)) zodType = 'z.instanceof(Buffer)'
 				// SQL Server
-				if (nativeType?.includes('Binary')) zodType = 'z.instanceof(Buffer)'
-				if (nativeType?.includes('VarBinary')) zodType = 'z.instanceof(Buffer)'
-				if (nativeType?.includes('Image')) zodType = 'z.instanceof(Buffer)'
+				else if (nativeType?.match(/^Image/)) zodType = 'z.instanceof(Buffer)'
+				else if (nativeType?.match(/^VarBinary/)) zodType = 'z.instanceof(Buffer)'
+				else if (nativeType?.match(/^Binary/)) zodType = 'z.instanceof(Buffer)'
 				break
 
 			case 'Json':
 				zodType = 'jsonSchema'
-				// PostgreSQL
-				if (nativeType?.includes('Json')) zodType = 'jsonSchema'
-				if (nativeType?.includes('JsonB')) zodType = 'jsonSchema'
-				// MySQL 5.7+
-				if (nativeType?.includes('Json')) zodType = 'jsonSchema'
 				break
 		}
 	} else if (field.kind === 'enum') {

@@ -217,7 +217,7 @@ Generated code:
 ```ts
 export const PostModel = z.object({
 	id: z.string().uuid(),
-	title: z.string().max(255, { message: 'The title must be shorter than 256 characters' }),
+	title: z.string().max(255, { message: "The title must be shorter than 256 characters" }),
 	contents: z.string().max(10240),
 })
 ```
@@ -243,7 +243,7 @@ The referenced file can then be used by simply referring to exported members via
 The generated zod schema files will now include a namespaced import like the following.
 
 ```typescript
-import * as imports from '../../src/zod-schemas'
+import * as imports from "../../src/zod-schemas"
 ```
 
 #### Custom Zod Schema

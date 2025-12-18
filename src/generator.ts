@@ -6,27 +6,24 @@ import {
 	StructureKind,
 	VariableDeclarationKind,
 } from "ts-morph"
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs'
+import { readFileSync, readdirSync, statSync, existsSync } from "fs"
 import { Config, PrismaOptions } from "./config"
 import { dotSlash, needsRelatedModel, useModelNames, writeArray } from "./util"
 import { getJSDocs, computeCustomSchema } from "./docs"
 import { getZodConstructor } from "./types"
 
 export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, string>> => {
-	let schemaContent = ''
+	let schemaContent = ""
 	let resolvedPath = schemaPath
 
 	try {
-
 		if (!existsSync(resolvedPath)) {
-
-			const withFile = path.join(schemaPath, 'schema.prisma')
+			const withFile = path.join(schemaPath, "schema.prisma")
 			const parentDir = path.dirname(schemaPath)
 
 			if (existsSync(withFile)) {
 				resolvedPath = withFile
 			} else if (existsSync(parentDir)) {
-
 				resolvedPath = parentDir
 			} else {
 				console.warn(`Schema path not found: ${schemaPath}`)
@@ -37,10 +34,8 @@ export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, st
 		const stat = statSync(resolvedPath)
 
 		if (stat.isFile()) {
-
 			schemaContent = readFileSync(resolvedPath, "utf-8")
 		} else if (stat.isDirectory()) {
-
 			const prismaFiles = findPrismaFiles(resolvedPath)
 
 			if (prismaFiles.length === 0) {
@@ -48,8 +43,8 @@ export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, st
 				return new Map()
 			}
 
-			prismaFiles.forEach(filePath => {
-				schemaContent += readFileSync(filePath, "utf-8") + '\n'
+			prismaFiles.forEach((filePath) => {
+				schemaContent += readFileSync(filePath, "utf-8") + "\n"
 			})
 		}
 	} catch (error) {
@@ -64,7 +59,6 @@ export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, st
 
 	const nativeTypes = new Map<string, Map<string, string>>()
 
-
 	const modelRegex = /model\s+(\w+)\s*\{([^}]+)\}/g
 	const fieldRegex = /(\w+)\s+(\w+(?:\[\])?)\s+([^;\n]+)/g
 
@@ -78,7 +72,6 @@ export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, st
 		while ((fieldMatch = fieldRegex.exec(modelBody)) !== null) {
 			const fieldName = fieldMatch[1]
 			const fieldLine = fieldMatch[0]
-
 
 			const dbMatch = fieldLine.match(/@db\.(\w+(?:\([^)]*\))?)/)?.[1]
 			if (dbMatch) {
@@ -103,19 +96,18 @@ const findPrismaFiles = (dir: string): string[] => {
 	try {
 		const files = readdirSync(dir)
 
-		files.forEach(file => {
+		files.forEach((file) => {
 			const fullPath = path.join(dir, file)
 
 			try {
 				const stat = statSync(fullPath)
 
-				if (stat.isDirectory() && !file.startsWith('.')) {
+				if (stat.isDirectory() && !file.startsWith(".")) {
 					prismaFiles.push(...findPrismaFiles(fullPath))
-				} else if (file.endsWith('.prisma')) {
+				} else if (file.endsWith(".prisma")) {
 					prismaFiles.push(fullPath)
 				}
 			} catch (error) {
-
 				console.warn(`Could not read ${fullPath}`)
 			}
 		})
@@ -130,7 +122,7 @@ export const writeImportsForModel = (
 	model: DMMF.Model,
 	sourceFile: SourceFile,
 	config: Config,
-	{ schemaPath, outputPath, clientPath }: PrismaOptions,
+	{ schemaPath, outputPath, clientPath }: PrismaOptions
 ) => {
 	const { relatedModelName } = useModelNames(config)
 	const importList: ImportDeclarationStructure[] = [
@@ -143,22 +135,19 @@ export const writeImportsForModel = (
 
 	if (config.imports) {
 		// If schemaPath is a directory, use it directly; otherwise use dirname
-		const baseDir = schemaPath.endsWith('.prisma')
-			? path.dirname(schemaPath)
-			: schemaPath
+		const baseDir = schemaPath.endsWith(".prisma") ? path.dirname(schemaPath) : schemaPath
 
 		importList.push({
 			kind: StructureKind.ImportDeclaration,
 			namespaceImport: "imports",
 			moduleSpecifier: dotSlash(
-				path.relative(outputPath, path.resolve(baseDir, config.imports)),
+				path.relative(outputPath, path.resolve(baseDir, config.imports))
 			),
 		})
 	}
 
-
 	const hasNonCustomDecimalFieldForImports = model.fields.some(
-		(f) => f.type === "Decimal" && (!f.documentation || !computeCustomSchema(f.documentation)),
+		(f) => f.type === "Decimal" && (!f.documentation || !computeCustomSchema(f.documentation))
 	)
 
 	if (config.useDecimalJs && hasNonCustomDecimalFieldForImports) {
@@ -190,7 +179,12 @@ export const writeImportsForModel = (
 				kind: StructureKind.ImportDeclaration,
 				moduleSpecifier: "./index",
 				namedImports: Array.from(
-					new Set(filteredFields.flatMap((f) => [`Complete${f.type}`, relatedModelName(f.type)])),
+					new Set(
+						filteredFields.flatMap((f) => [
+							`Complete${f.type}`,
+							relatedModelName(f.type),
+						])
+					)
 				),
 			})
 		}
@@ -203,16 +197,19 @@ export const writeTypeSpecificSchemas = (
 	model: DMMF.Model,
 	sourceFile: SourceFile,
 	config: Config,
-	_prismaOptions: PrismaOptions,
+	_prismaOptions: PrismaOptions
 ) => {
 	if (model.fields.some((f) => f.type === "Json")) {
 		sourceFile.addStatements((writer) => {
 			writer.newLine()
 			writeArray(writer, [
 				"// Helper schema for JSON fields",
-				`type Literal = boolean | number | string${config.prismaJsonNullability ? "" : "| null"}`,
+				`type Literal = boolean | number | string${
+					config.prismaJsonNullability ? "" : "| null"
+				}`,
 				"type Json = Literal | { [key: string]: Json } | Json[]",
-				`const literalSchema = z.union([z.string(), z.number(), z.boolean()${config.prismaJsonNullability ? "" : ", z.null()"
+				`const literalSchema = z.union([z.string(), z.number(), z.boolean()${
+					config.prismaJsonNullability ? "" : ", z.null()"
 				}])`,
 				"const jsonSchema: z.ZodSchema<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]))",
 			])
@@ -220,7 +217,7 @@ export const writeTypeSpecificSchemas = (
 	}
 
 	const hasNonCustomDecimalField = model.fields.some(
-		(f) => f.type === "Decimal" && (!f.documentation || !computeCustomSchema(f.documentation)),
+		(f) => f.type === "Decimal" && (!f.documentation || !computeCustomSchema(f.documentation))
 	)
 
 	if (config.useDecimalJs && hasNonCustomDecimalField) {
@@ -249,7 +246,7 @@ export const generateSchemaForModel = (
 	model: DMMF.Model,
 	sourceFile: SourceFile,
 	config: Config,
-	{ schemaPath }: PrismaOptions,
+	{ schemaPath }: PrismaOptions
 ) => {
 	const { modelName } = useModelNames(config)
 
@@ -273,7 +270,13 @@ export const generateSchemaForModel = (
 									writeArray(writer, getJSDocs(field.documentation))
 									const nativeType = modelNativeTypes.get(field.name)
 									writer
-										.write(`${field.name}: ${getZodConstructor(field, undefined, nativeType)}`)
+										.write(
+											`${field.name}: ${getZodConstructor(
+												field,
+												undefined,
+												nativeType
+											)}`
+										)
 										.write(",")
 										.newLine()
 								})
@@ -289,7 +292,7 @@ export const generateRelatedSchemaForModel = (
 	model: DMMF.Model,
 	sourceFile: SourceFile,
 	config: Config,
-	_prismaOptions: PrismaOptions,
+	_prismaOptions: PrismaOptions
 ) => {
 	const { modelName, relatedModelName } = useModelNames(config)
 
@@ -311,12 +314,12 @@ export const generateRelatedSchemaForModel = (
 			"",
 			"/**",
 			` * ${relatedModelName(
-				model.name,
+				model.name
 			)} contains all relations on your model in addition to the scalars`,
 			" *",
 			" * NOTE: Lazy required in case of potential circular dependencies within schema",
 			" */",
-		]),
+		])
 	)
 
 	sourceFile.addVariableStatement({
@@ -334,7 +337,12 @@ export const generateRelatedSchemaForModel = (
 								writeArray(writer, getJSDocs(field.documentation))
 
 								writer
-									.write(`${field.name}: ${getZodConstructor(field, relatedModelName)}`)
+									.write(
+										`${field.name}: ${getZodConstructor(
+											field,
+											relatedModelName
+										)}`
+									)
 									.write(",")
 									.newLine()
 							})
@@ -350,7 +358,7 @@ export const populateModelFile = (
 	model: DMMF.Model,
 	sourceFile: SourceFile,
 	config: Config,
-	prismaOptions: PrismaOptions,
+	prismaOptions: PrismaOptions
 ) => {
 	writeImportsForModel(model, sourceFile, config, prismaOptions)
 	writeTypeSpecificSchemas(model, sourceFile, config, prismaOptions)

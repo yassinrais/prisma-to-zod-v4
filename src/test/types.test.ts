@@ -1,8 +1,8 @@
-import { DMMF } from '@prisma/generator-helper'
-import { getZodConstructor } from '../types'
+import { DMMF } from "@prisma/generator-helper"
+import { getZodConstructor } from "../types"
 
-describe('types Package', () => {
-	test('getZodConstructor', () => {
+describe("types Package", () => {
+	test("getZodConstructor", () => {
 		const field: DMMF.Field = {
 			hasDefaultValue: false,
 			isGenerated: false,
@@ -12,18 +12,18 @@ describe('types Package', () => {
 			isReadOnly: false,
 			isUpdatedAt: false,
 			isUnique: false,
-			kind: 'scalar',
-			name: 'nameList',
-			type: 'String',
-			documentation: ['@zod.max(64)', '@zod.min(1)'].join('\n'),
+			kind: "scalar",
+			name: "nameList",
+			type: "String",
+			documentation: ["@zod.max(64)", "@zod.min(1)"].join("\n"),
 		}
 
 		const constructor = getZodConstructor(field)
 
-		expect(constructor).toBe('z.string().array().max(64).min(1).nullish()')
+		expect(constructor).toBe("z.string().array().max(64).min(1).nullish()")
 	})
 
-	test('regression - unknown type', () => {
+	test("regression - unknown type", () => {
 		const field: DMMF.Field = {
 			hasDefaultValue: false,
 			isGenerated: false,
@@ -33,13 +33,13 @@ describe('types Package', () => {
 			isUnique: false,
 			isReadOnly: false,
 			isUpdatedAt: false,
-			kind: 'scalar',
-			name: 'aField',
-			type: 'SomeUnknownType',
+			kind: "scalar",
+			name: "aField",
+			type: "SomeUnknownType",
 		}
 
 		const constructor = getZodConstructor(field)
 
-		expect(constructor).toBe('z.unknown()')
+		expect(constructor).toBe("z.unknown()")
 	})
 })

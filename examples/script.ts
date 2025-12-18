@@ -1,5 +1,5 @@
-import { PrismaClient, Prisma } from '@prisma/client'
-import { UserModel } from './prisma/zod'
+import { PrismaClient, Prisma } from "@prisma/client"
+import { UserModel } from "./prisma/zod"
 
 const user = UserModel.parse({
 	id: 1,
