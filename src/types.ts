@@ -62,11 +62,11 @@ export const getZodConstructor = (
 				break
 
 			case 'Float':
-				zodType = 'z.number()'
+				zodType = 'z.coerce.number()'
 				break
 
 			case 'Decimal':
-				zodType = 'z.number()'
+				zodType = 'z.coerce.number()'
 				if (nativeType?.match(/^Numeric\(\d+,\d+\)/)) {
 					const match = nativeType.match(/Numeric\((\d+),(\d+)\)/)
 					if (match) {
