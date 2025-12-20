@@ -20,12 +20,10 @@ export const getZodConstructor = (
 				else if (nativeType?.match(/^VarChar\(\d+\)/)) {
 					const length = nativeType.match(/VarChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
-				}
-				else if (nativeType?.match(/^Char\(\d+\)/)) {
+				} else if (nativeType?.match(/^Char\(\d+\)/)) {
 					const length = nativeType.match(/Char\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
-				}
-				else if (nativeType?.match(/^Text/)) zodType = 'z.string()'
+				} else if (nativeType?.match(/^Text/)) zodType = 'z.string()'
 				else if (nativeType?.match(/^VarBit/)) zodType = 'z.string()'
 				else if (nativeType?.match(/^Bit/)) zodType = 'z.string()'
 				// MySQL
@@ -35,12 +33,10 @@ export const getZodConstructor = (
 				else if (nativeType?.match(/^NVarChar\(\d+\)/)) {
 					const length = nativeType.match(/NVarChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
-				}
-				else if (nativeType?.match(/^NChar\(\d+\)/)) {
+				} else if (nativeType?.match(/^NChar\(\d+\)/)) {
 					const length = nativeType.match(/NChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
-				}
-				else if (nativeType?.match(/^NText/)) zodType = 'z.string()'
+				} else if (nativeType?.match(/^NText/)) zodType = 'z.string()'
 				// MongoDB
 				else if (nativeType?.match(/^ObjectId/)) extraModifiers.push('regex(/^[0-9a-f]{24}$/i)')
 				break
@@ -71,14 +67,21 @@ export const getZodConstructor = (
 					const match = nativeType.match(/Numeric\((\d+),(\d+)\)/)
 					if (match) {
 						const [, precision, scale] = match
-						extraModifiers.push(`refine(x => /^\\d{1,${Number(precision) - parseInt(scale)}}(\\.\\d{1,${scale}})?$/.test(x.toString()))`)
+						extraModifiers.push(
+							`refine(x => /^\\d{1,${
+								Number(precision) - parseInt(scale)
+							}}(\\.\\d{1,${scale}})?$/.test(x.toString()))`
+						)
 					}
-				}
-				else if (nativeType?.match(/^Decimal\(\d+,\d+\)/)) {
+				} else if (nativeType?.match(/^Decimal\(\d+,\d+\)/)) {
 					const match = nativeType.match(/Decimal\((\d+),(\d+)\)/)
 					if (match) {
 						const [, precision, scale] = match
-						extraModifiers.push(`refine(x => /^\\d{1,${Number(precision) - parseInt(scale)}}(\\.\\d{1,${scale}})?$/.test(x.toString()))`)
+						extraModifiers.push(
+							`refine(x => /^\\d{1,${
+								Number(precision) - parseInt(scale)
+							}}(\\.\\d{1,${scale}})?$/.test(x.toString()))`
+						)
 					}
 				}
 				break
@@ -88,7 +91,8 @@ export const getZodConstructor = (
 				// PostgreSQL
 				if (nativeType?.match(/^TimestampTz/)) zodType = 'z.date()'
 				else if (nativeType?.match(/^Timestamp/)) zodType = 'z.date()'
-				else if (nativeType?.match(/^TimeTz/)) zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$/)'
+				else if (nativeType?.match(/^TimeTz/))
+					zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$/)'
 				else if (nativeType?.match(/^Time/)) zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}$/)'
 				else if (nativeType?.match(/^Date/)) zodType = 'z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/)'
 				// MySQL
@@ -135,6 +139,8 @@ export const getZodConstructor = (
 	if (!field.isRequired && field.type !== 'Json') extraModifiers.push('nullish()')
 
 	// Filter out empty strings and join
-	const validModifiers = extraModifiers.filter(m => m !== '')
+	const validModifiers = extraModifiers
+		.filter((m) => m !== '')
+		.filter((m, i, l) => l.indexOf(m) === i)
 	return validModifiers.length > 0 ? `${zodType}.${validModifiers.join('.')}` : zodType
 }

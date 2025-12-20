@@ -69,9 +69,9 @@ export type Spreadsheet = {
 // https://github.com/microsoft/TypeScript/issues/3192#issuecomment-261720275
 
 export const Status = {
-	draft: "draft",
-	live: "live",
-	archived: "archived",
+	draft: 'draft',
+	live: 'live',
+	archived: 'archived',
 }
 
 export type Status = (typeof Status)[keyof typeof Status]

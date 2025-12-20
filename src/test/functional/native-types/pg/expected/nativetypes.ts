@@ -1,14 +1,12 @@
-import * as z from "zod"
-import { Decimal } from "decimal.js"
-import { Status } from "../prisma/.client"
+import * as z from 'zod'
+import { Decimal } from 'decimal.js'
+import { Status } from '../prisma/.client'
 
 // Helper schema for JSON fields
 type Literal = boolean | number | string
 type Json = Literal | { [key: string]: Json } | Json[]
 const literalSchema = z.union([z.string(), z.number(), z.boolean()])
-const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
-	z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)])
-)
+const jsonSchema: z.ZodSchema<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]))
 
 // Helper schema for Decimal fields
 z.instanceof(Decimal)
@@ -25,7 +23,15 @@ z.instanceof(Decimal)
 
 export const NativeTypesModel = z.object({
 	id: z.uuid(),
-	title: z.string(),
+	name: z.string(),
+	logoId: z.uuid().nullish(),
+	iconId: z.uuid().nullish(),
+	uniqueSlug: z.string(),
+	stripeCustomerId: z.string().nullish(),
+	stripeSubscriptionId: z.string().nullish(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+	title: z.string().max(255),
 	slug: z.string().max(100),
 	description: z.string(),
 	uuid: z.uuid(),
@@ -34,9 +40,9 @@ export const NativeTypesModel = z.object({
 	count: z.number().int(),
 	smallNumber: z.number().int().min(-32768).max(32767),
 	bigNumber: z.bigint(),
-	price: z.number(),
-	rating: z.number(),
-	accurate: z.number(),
+	price: z.coerce.number(),
+	rating: z.coerce.number(),
+	accurate: z.coerce.number(),
 	publishedAt: z.date(),
 	scheduledFor: z.date(),
 	eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

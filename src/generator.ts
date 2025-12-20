@@ -1,87 +1,67 @@
-import path from "path"
-import { DMMF } from "@prisma/generator-helper"
+import path from 'path'
+import { DMMF } from '@prisma/generator-helper'
 import {
 	ImportDeclarationStructure,
 	SourceFile,
 	StructureKind,
 	VariableDeclarationKind,
-} from "ts-morph"
-import { readFileSync, readdirSync, statSync, existsSync } from "fs"
-import { Config, PrismaOptions } from "./config"
-import { dotSlash, needsRelatedModel, useModelNames, writeArray } from "./util"
-import { getJSDocs, computeCustomSchema } from "./docs"
-import { getZodConstructor } from "./types"
+} from 'ts-morph'
+import { readFileSync, readdirSync, statSync, existsSync } from 'fs'
+import { Config, PrismaOptions } from './config'
+import { dotSlash, needsRelatedModel, useModelNames, writeArray } from './util'
+import { getJSDocs, computeCustomSchema } from './docs'
+import { getZodConstructor } from './types'
 
 export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, string>> => {
-	let schemaContent = ""
+	let schemaContent = ''
 	let resolvedPath = schemaPath
 
-	try {
-		if (!existsSync(resolvedPath)) {
-			const withFile = path.join(schemaPath, "schema.prisma")
-			const parentDir = path.dirname(schemaPath)
-
-			if (existsSync(withFile)) {
-				resolvedPath = withFile
-			} else if (existsSync(parentDir)) {
-				resolvedPath = parentDir
-			} else {
-				console.warn(`Schema path not found: ${schemaPath}`)
-				return new Map()
-			}
-		}
-
-		const stat = statSync(resolvedPath)
-
-		if (stat.isFile()) {
-			schemaContent = readFileSync(resolvedPath, "utf-8")
-		} else if (stat.isDirectory()) {
-			const prismaFiles = findPrismaFiles(resolvedPath)
-
-			if (prismaFiles.length === 0) {
-				console.warn(`No .prisma files found in ${resolvedPath}`)
-				return new Map()
-			}
-
-			prismaFiles.forEach((filePath) => {
-				schemaContent += readFileSync(filePath, "utf-8") + "\n"
-			})
-		}
-	} catch (error) {
-		console.error(`Error reading schema path: ${schemaPath}`, error)
-		return new Map()
+	// Resolve file or directory
+	if (!existsSync(resolvedPath)) {
+		const withFile = path.join(schemaPath, 'schema.prisma')
+		const parentDir = path.dirname(schemaPath)
+		if (existsSync(withFile)) resolvedPath = withFile
+		else if (existsSync(parentDir)) resolvedPath = parentDir
+		else return new Map()
 	}
 
-	if (!schemaContent) {
-		console.warn(`No schema content found at ${schemaPath}`)
-		return new Map()
+	// Read schema content
+	const stat = statSync(resolvedPath)
+	if (stat.isFile()) schemaContent = readFileSync(resolvedPath, 'utf-8')
+	else if (stat.isDirectory()) {
+		const prismaFiles = findPrismaFiles(resolvedPath)
+		if (prismaFiles.length === 0) return new Map()
+		prismaFiles.forEach((filePath) => {
+			schemaContent += readFileSync(filePath, 'utf-8') + '\n'
+		})
 	}
 
 	const nativeTypes = new Map<string, Map<string, string>>()
-
-	const modelRegex = /model\s+(\w+)\s*\{([^}]+)\}/g
-	const fieldRegex = /(\w+)\s+(\w+(?:\[\])?)\s+([^;\n]+)/g
-
+	const modelRegex = /model\s+(\w+)\s*\{([\s\S]*?)\}/g
 	let modelMatch
+
 	while ((modelMatch = modelRegex.exec(schemaContent)) !== null) {
 		const modelName = modelMatch[1]
 		const modelBody = modelMatch[2]
 		const fields = new Map<string, string>()
 
-		let fieldMatch
-		while ((fieldMatch = fieldRegex.exec(modelBody)) !== null) {
-			const fieldName = fieldMatch[1]
-			const fieldLine = fieldMatch[0]
+		const lines = modelBody.split('\n')
+		for (const line of lines) {
+			const trimmed = line.trim()
+			if (!trimmed || trimmed.startsWith('//')) continue
 
-			const dbMatch = fieldLine.match(/@db\.(\w+(?:\([^)]*\))?)/)?.[1]
-			if (dbMatch) {
-				fields.set(fieldName, dbMatch)
-			}
+			const parts = trimmed.split(/\s+/)
+			if (parts.length < 2) continue // must have field name + type
+
+			const fieldName = parts[0]
+			const attributes = parts.slice(2).join(' ')
+
+			// Capture @db.* exactly
+			const dbMatch = attributes.match(/@db\.([A-Za-z0-9_()]+)/)?.[1]
+			if (dbMatch) fields.set(fieldName, dbMatch)
 		}
 
-		if (fields.size > 0) {
-			nativeTypes.set(modelName, fields)
-		}
+		if (fields.size > 0) nativeTypes.set(modelName, fields)
 	}
 
 	return nativeTypes
@@ -102,9 +82,9 @@ const findPrismaFiles = (dir: string): string[] => {
 			try {
 				const stat = statSync(fullPath)
 
-				if (stat.isDirectory() && !file.startsWith(".")) {
+				if (stat.isDirectory() && !file.startsWith('.')) {
 					prismaFiles.push(...findPrismaFiles(fullPath))
-				} else if (file.endsWith(".prisma")) {
+				} else if (file.endsWith('.prisma')) {
 					prismaFiles.push(fullPath)
 				}
 			} catch (error) {
@@ -128,38 +108,36 @@ export const writeImportsForModel = (
 	const importList: ImportDeclarationStructure[] = [
 		{
 			kind: StructureKind.ImportDeclaration,
-			namespaceImport: "z",
-			moduleSpecifier: "zod",
+			namespaceImport: 'z',
+			moduleSpecifier: 'zod',
 		},
 	]
 
 	if (config.imports) {
 		// If schemaPath is a directory, use it directly; otherwise use dirname
-		const baseDir = schemaPath.endsWith(".prisma") ? path.dirname(schemaPath) : schemaPath
+		const baseDir = schemaPath.endsWith('.prisma') ? path.dirname(schemaPath) : schemaPath
 
 		importList.push({
 			kind: StructureKind.ImportDeclaration,
-			namespaceImport: "imports",
-			moduleSpecifier: dotSlash(
-				path.relative(outputPath, path.resolve(baseDir, config.imports))
-			),
+			namespaceImport: 'imports',
+			moduleSpecifier: dotSlash(path.relative(outputPath, path.resolve(baseDir, config.imports))),
 		})
 	}
 
 	const hasNonCustomDecimalFieldForImports = model.fields.some(
-		(f) => f.type === "Decimal" && (!f.documentation || !computeCustomSchema(f.documentation))
+		(f) => f.type === 'Decimal' && (!f.documentation || !computeCustomSchema(f.documentation))
 	)
 
 	if (config.useDecimalJs && hasNonCustomDecimalFieldForImports) {
 		importList.push({
 			kind: StructureKind.ImportDeclaration,
-			namedImports: ["Decimal"],
-			moduleSpecifier: "decimal.js",
+			namedImports: ['Decimal'],
+			moduleSpecifier: 'decimal.js',
 		})
 	}
 
-	const enumFields = model.fields.filter((f) => f.kind === "enum")
-	const relationFields = model.fields.filter((f) => f.kind === "object")
+	const enumFields = model.fields.filter((f) => f.kind === 'enum')
+	const relationFields = model.fields.filter((f) => f.kind === 'object')
 	const relativePath = path.relative(outputPath, clientPath)
 
 	if (enumFields.length > 0) {
@@ -177,14 +155,9 @@ export const writeImportsForModel = (
 		if (filteredFields.length > 0) {
 			importList.push({
 				kind: StructureKind.ImportDeclaration,
-				moduleSpecifier: "./index",
+				moduleSpecifier: './index',
 				namedImports: Array.from(
-					new Set(
-						filteredFields.flatMap((f) => [
-							`Complete${f.type}`,
-							relatedModelName(f.type),
-						])
-					)
+					new Set(filteredFields.flatMap((f) => [`Complete${f.type}`, relatedModelName(f.type)]))
 				),
 			})
 		}
@@ -199,44 +172,43 @@ export const writeTypeSpecificSchemas = (
 	config: Config,
 	_prismaOptions: PrismaOptions
 ) => {
-	if (model.fields.some((f) => f.type === "Json")) {
+	if (model.fields.some((f) => f.type === 'Json')) {
 		sourceFile.addStatements((writer) => {
 			writer.newLine()
 			writeArray(writer, [
-				"// Helper schema for JSON fields",
-				`type Literal = boolean | number | string${
-					config.prismaJsonNullability ? "" : "| null"
-				}`,
-				"type Json = Literal | { [key: string]: Json } | Json[]",
+				'// Helper schema for JSON fields',
+				`type Literal = boolean | number | string${config.prismaJsonNullability ? '' : '| null'}`,
+				'type Json = Literal | { [key: string]: Json } | Json[]',
 				`const literalSchema = z.union([z.string(), z.number(), z.boolean()${
-					config.prismaJsonNullability ? "" : ", z.null()"
+					config.prismaJsonNullability ? '' : ', z.null()'
 				}])`,
-				"const jsonSchema: z.ZodSchema<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]))",
+				'const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>',
+				'	z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)])',
+				')',
 			])
 		})
 	}
 
 	const hasNonCustomDecimalField = model.fields.some(
-		(f) => f.type === "Decimal" && (!f.documentation || !computeCustomSchema(f.documentation))
+		(f) => f.type === 'Decimal' && (!f.documentation || !computeCustomSchema(f.documentation))
 	)
 
 	if (config.useDecimalJs && hasNonCustomDecimalField) {
 		sourceFile.addStatements((writer) => {
 			writer.newLine()
 			writeArray(writer, [
-				"// Helper schema for Decimal fields",
-				"z",
-				".instanceof(Decimal)",
-				".or(z.string())",
-				".or(z.number())",
-				".refine((value) => {",
-				"  try {",
-				"    return new Decimal(value);",
-				"  } catch (error) {",
-				"    return false;",
-				"  }",
-				"})",
-				".transform((value) => new Decimal(value));",
+				'// Helper schema for Decimal fields',
+				'z.instanceof(Decimal)',
+				'.or(z.string())',
+				'.or(z.number())',
+				'.refine((value) => {',
+				'  try {',
+				'    return new Decimal(value);',
+				'  } catch (error) {',
+				'    return false;',
+				'  }',
+				'})',
+				'.transform((value) => new Decimal(value));',
 			])
 		})
 	}
@@ -262,26 +234,20 @@ export const generateSchemaForModel = (
 				name: modelName(model.name),
 				initializer(writer) {
 					writer
-						.write("z.object(")
+						.write('z.object(')
 						.inlineBlock(() => {
 							model.fields
-								.filter((f) => f.kind !== "object")
+								.filter((f) => f.kind !== 'object')
 								.forEach((field) => {
 									writeArray(writer, getJSDocs(field.documentation))
 									const nativeType = modelNativeTypes.get(field.name)
 									writer
-										.write(
-											`${field.name}: ${getZodConstructor(
-												field,
-												undefined,
-												nativeType
-											)}`
-										)
-										.write(",")
+										.write(`${field.name}: ${getZodConstructor(field, undefined, nativeType)}`)
+										.write(',')
 										.newLine()
 								})
 						})
-						.write(")")
+						.write(')')
 				},
 			},
 		],
@@ -296,7 +262,7 @@ export const generateRelatedSchemaForModel = (
 ) => {
 	const { modelName, relatedModelName } = useModelNames(config)
 
-	const relationFields = model.fields.filter((f) => f.kind === "object")
+	const relationFields = model.fields.filter((f) => f.kind === 'object')
 
 	sourceFile.addInterface({
 		name: `Complete${model.name}`,
@@ -305,20 +271,20 @@ export const generateRelatedSchemaForModel = (
 		properties: relationFields.map((f) => ({
 			hasQuestionToken: !f.isRequired,
 			name: f.name,
-			type: `Complete${f.type}${f.isList ? "[]" : ""}${!f.isRequired ? " | null" : ""}`,
+			type: `Complete${f.type}${f.isList ? '[]' : ''}${!f.isRequired ? ' | null' : ''}`,
 		})),
 	})
 
 	sourceFile.addStatements((writer) =>
 		writeArray(writer, [
-			"",
-			"/**",
+			'',
+			'/**',
 			` * ${relatedModelName(
 				model.name
 			)} contains all relations on your model in addition to the scalars`,
-			" *",
-			" * NOTE: Lazy required in case of potential circular dependencies within schema",
-			" */",
+			' *',
+			' * NOTE: Lazy required in case of potential circular dependencies within schema',
+			' */',
 		])
 	)
 
@@ -337,17 +303,12 @@ export const generateRelatedSchemaForModel = (
 								writeArray(writer, getJSDocs(field.documentation))
 
 								writer
-									.write(
-										`${field.name}: ${getZodConstructor(
-											field,
-											relatedModelName
-										)}`
-									)
-									.write(",")
+									.write(`${field.name}: ${getZodConstructor(field, relatedModelName)}`)
+									.write(',')
 									.newLine()
 							})
 						})
-						.write("))")
+						.write('))')
 				},
 			},
 		],

@@ -37,11 +37,18 @@
 				"noArrayIndexKey": "off"
 			}
 		},
-		"ignore": ["node_modules", ".next", "src/test/**"]
+		"ignore": [
+			"node_modules",
+			".next",
+			"src/test/**"
+		]
 	},
 	"files": {
 		"maxSize": 5242880,
-		"ignore": ["**/dist/**", "src/test/**"]
+		"ignore": [
+			"**/dist/**",
+			"src/test/**"
+		]
 	},
 	"javascript": {
 		"formatter": {
@@ -58,7 +65,10 @@
 	},
 	"overrides": [
 		{
-			"include": ["*.ts", "*.tsx"],
+			"include": [
+				"*.ts",
+				"*.tsx"
+			],
 			"formatter": {
 				"enabled": true
 			}

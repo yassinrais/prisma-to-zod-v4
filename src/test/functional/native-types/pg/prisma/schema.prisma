@@ -20,50 +20,58 @@ enum Status {
 }
 
 model NativeTypes {
-	id      String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  
+  id                   String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name                 String
+  logoId               String?  @map("logo_id") @db.Uuid
+  iconId               String?  @map("icon_id") @db.Uuid
+  uniqueSlug           String   @unique
+  stripeCustomerId     String?  @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?  @unique @map("stripe_subscription_id")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
   // String types
-  title        String   @db.VarChar(255)
-  slug         String   @db.Char(100)
-  description  String   @db.Text
-  uuid         String   @db.Uuid
-  citext       String   @db.Citext
-  bitfield     String   @db.Bit(32)
-  
+  title       String @db.VarChar(255)
+  slug        String @db.Char(100)
+  description String @db.Text
+  uuid        String @db.Uuid
+  citext      String @db.Citext
+  bitfield    String @db.Bit(32)
+
   // Integer types
-  count        Int
-  smallNumber  Int      @db.SmallInt
-  bigNumber    BigInt
-  
+  count       Int
+  smallNumber Int    @db.SmallInt
+  bigNumber   BigInt
+
   // Numeric types
-  price        Decimal  @db.Decimal(10, 2)
-  rating       Float    @db.Real
-  accurate     Float    @db.DoublePrecision
-  
+  price    Decimal @db.Decimal(10, 2)
+  rating   Float   @db.Real
+  accurate Float   @db.DoublePrecision
+
   // DateTime types
   publishedAt  DateTime @db.Timestamptz()
   scheduledFor DateTime @db.Timestamp()
   eventDate    DateTime @db.Date
   eventTime    DateTime @db.Time()
   eventTimeTz  DateTime @db.Timetz()
-  
+
   // Boolean & Bytes
-  isActive     Boolean  @default(true)
-  signature    Bytes    @db.ByteA
-  
+  isActive  Boolean @default(true)
+  signature Bytes   @db.ByteA
+
   // JSON types
-  metadata     Json     @db.JsonB
-  config       Json     @db.Json
-  
+  metadata Json @db.JsonB
+  config   Json @db.Json
+
   // Array types
-  tags         String[]
-  ratings      Int[]
-  flags        Boolean[]
-  
+  tags    String[]
+  ratings Int[]
+  flags   Boolean[]
+
   // Enum
-  status       Status   @default(ACTIVE)
-  
+  status Status @default(ACTIVE)
+
   // Timestamps
-  created      DateTime @default(now())
-  updated      DateTime @updatedAt
+  created DateTime @default(now())
+  updated DateTime @updatedAt
 }

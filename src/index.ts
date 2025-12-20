@@ -1,23 +1,27 @@
 // @ts-ignore Importing package.json for automated synchronization of version numbers
-import { version } from "../package.json"
+import { version } from '../package.json'
 
-import { generatorHandler } from "@prisma/generator-helper"
-import { SemicolonPreference } from "typescript"
-import path from "path"
-import { configSchema, PrismaOptions } from "./config"
-import { populateModelFile, generateBarrelFile } from "./generator"
-import { Project } from "ts-morph"
+import { generatorHandler } from '@prisma/generator-helper'
+import { SemicolonPreference } from 'typescript'
+import path from 'path'
+import { configSchema, PrismaOptions } from './config'
+import { populateModelFile, generateBarrelFile } from './generator'
+import { Project, QuoteKind } from 'ts-morph'
 
 generatorHandler({
 	onManifest() {
 		return {
 			version,
-			prettyName: "Zod Schemas",
-			defaultOutput: "zod",
+			prettyName: 'Zod Schemas',
+			defaultOutput: 'zod',
 		}
 	},
 	onGenerate(options) {
-		const project = new Project()
+		const project = new Project({
+			manipulationSettings: {
+				quoteKind: QuoteKind.Single,
+			},
+		})
 
 		const models = [...options.dmmf.datamodel.models]
 
@@ -27,13 +31,13 @@ generatorHandler({
 
 		const outputPath = options.generator.output!.value!
 		const clientPath = options.otherGenerators.find(
-			(each) => each.provider.value === "prisma-client-js"
+			(each) => each.provider.value === 'prisma-client-js'
 		)!.output!.value!
 
 		const results = configSchema.safeParse(options.generator.config)
 		if (!results.success)
 			throw new Error(
-				"Incorrect config provided. Please check the values you provided and try again."
+				'Incorrect config provided. Please check the values you provided and try again.'
 			)
 
 		const config = results.data
@@ -43,11 +47,7 @@ generatorHandler({
 			schemaPath: schemaDir, // Pass the directory, not the file
 		}
 
-		const indexFile = project.createSourceFile(
-			`${outputPath}/index.ts`,
-			{},
-			{ overwrite: true }
-		)
+		const indexFile = project.createSourceFile(`${outputPath}/index.ts`, {}, { overwrite: true })
 
 		generateBarrelFile(models, indexFile)
 

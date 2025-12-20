@@ -1,5 +1,5 @@
-import * as z from "zod"
-import { CompleteKeychain, RelatedKeychainModel } from "./index"
+import * as z from 'zod'
+import { CompleteKeychain, RelatedKeychainModel } from './index'
 
 export const UserModel = z.object({
 	id: z.string(),

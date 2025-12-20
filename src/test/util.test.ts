@@ -1,10 +1,10 @@
-import path from "path"
-import { describe, test, expect, mock } from "bun:test"
-import { dotSlash, writeArray } from "../util"
+import path from 'path'
+import { describe, test, expect, mock } from 'bun:test'
+import { dotSlash, writeArray } from '../util'
 
-describe("Util Package", () => {
-	test("writeArray: default newLines", () => {
-		const arrayToWrite = ["this", "is", "a", "line"]
+describe('Util Package', () => {
+	test('writeArray: default newLines', () => {
+		const arrayToWrite = ['this', 'is', 'a', 'line']
 		const writer = {
 			write: mock(() => undefined),
 			conditionalNewLine: mock(() => undefined),
@@ -14,10 +14,10 @@ describe("Util Package", () => {
 
 		writeArray(writer, arrayToWrite)
 
-		expect(writer.write).toHaveBeenCalledWith("this")
-		expect(writer.write).toHaveBeenCalledWith("is")
-		expect(writer.write).toHaveBeenCalledWith("a")
-		expect(writer.write).toHaveBeenCalledWith("line")
+		expect(writer.write).toHaveBeenCalledWith('this')
+		expect(writer.write).toHaveBeenCalledWith('is')
+		expect(writer.write).toHaveBeenCalledWith('a')
+		expect(writer.write).toHaveBeenCalledWith('line')
 		expect(writer.write).toHaveBeenCalledTimes(4)
 
 		expect(writer.conditionalNewLine).toHaveBeenCalledWith(true)
@@ -27,8 +27,8 @@ describe("Util Package", () => {
 		expect(writer.conditionalNewLine).toHaveBeenCalledTimes(4)
 	})
 
-	test("writeArray: no newLines", () => {
-		const arrayToWrite = ["this", "is", "a", "line"]
+	test('writeArray: no newLines', () => {
+		const arrayToWrite = ['this', 'is', 'a', 'line']
 		const writer = {
 			write: mock(() => undefined),
 			conditionalNewLine: mock(() => undefined),
@@ -45,14 +45,14 @@ describe("Util Package", () => {
 		expect(writer.conditionalNewLine).toHaveBeenCalledTimes(4)
 	})
 
-	test("dotSlash", () => {
-		expect(dotSlash("../banana")).toBe("../banana")
-		expect(dotSlash("test/1/2/3")).toBe("./test/1/2/3")
-		expect(dotSlash("../../node_modules/@prisma/client")).toBe("@prisma/client")
+	test('dotSlash', () => {
+		expect(dotSlash('../banana')).toBe('../banana')
+		expect(dotSlash('test/1/2/3')).toBe('./test/1/2/3')
+		expect(dotSlash('../../node_modules/@prisma/client')).toBe('@prisma/client')
 
 		if (path.sep !== path.posix.sep) {
-			expect(dotSlash("test\\1\\2\\3")).toBe("./test/1/2/3")
-			expect(dotSlash("..\\..\\node_modules\\@prisma\\client")).toBe("@prisma/client")
+			expect(dotSlash('test\\1\\2\\3')).toBe('./test/1/2/3')
+			expect(dotSlash('..\\..\\node_modules\\@prisma\\client')).toBe('@prisma/client')
 		}
 	})
 })

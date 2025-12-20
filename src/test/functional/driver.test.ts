@@ -1,19 +1,19 @@
-import { getConfig, getDMMF } from '@prisma/sdk';
-import { describe, expect, test } from 'bun:test';
-import { execa } from 'execa';
-import glob from 'fast-glob';
-import { readdirSync, readFile } from 'fs-extra';
-import path from 'path';
-import { Project } from 'ts-morph';
-import { SemicolonPreference } from 'typescript';
-import { configSchema, PrismaOptions } from '../../config';
-import { generateBarrelFile, populateModelFile } from '../../generator';
+import { getConfig, getDMMF } from '@prisma/sdk'
+import { describe, expect, test } from 'bun:test'
+import { readdirSync, readFile } from 'fs-extra'
+import path from 'path'
+import { execa } from 'execa'
+import glob from 'fast-glob'
+import { Project, QuoteKind } from 'ts-morph'
+import { SemicolonPreference } from 'typescript'
+import { configSchema, PrismaOptions } from '../../config'
+import { generateBarrelFile, populateModelFile } from '../../generator'
 
 /**
  * Read all .prisma files from a directory and combine them
  */
 const readAllPrismaFiles = async (prismaDir: string): Promise<string> => {
-	const files = readdirSync(prismaDir).filter(f => f.endsWith('.prisma'))
+	const files = readdirSync(prismaDir).filter((f) => f.endsWith('.prisma'))
 	let combined = ''
 
 	for (const file of files) {
@@ -35,13 +35,16 @@ const readAllPrismaFiles = async (prismaDir: string): Promise<string> => {
 	return schemaContent + '\n' + combined
 }
 
-
 const ftForDir = (dir: string) => async () => {
 	const schemaDir = path.resolve(__dirname, dir, 'prisma')
 	const expectedDir = path.resolve(__dirname, dir, 'expected')
 	const actualDir = path.resolve(__dirname, dir, 'actual')
 
-	const project = new Project()
+	const project = new Project({
+		manipulationSettings: {
+			quoteKind: QuoteKind.Single,
+		},
+	})
 
 	// Read all .prisma files (handles multiple schema files)
 	const datamodel = await readAllPrismaFiles(schemaDir)
@@ -80,7 +83,7 @@ const ftForDir = (dir: string) => async () => {
 
 	indexFile.formatText({
 		indentSize: 2,
-		convertTabsToSpaces: true,
+		convertTabsToSpaces: false,
 		semicolons: SemicolonPreference.Remove,
 	})
 
@@ -104,8 +107,8 @@ const ftForDir = (dir: string) => async () => {
 			populateModelFile(model as never, sourceFile, config, prismaOptions)
 
 			sourceFile.formatText({
-				indentSize: 2,
-				convertTabsToSpaces: true,
+				indentSize: 4,
+				convertTabsToSpaces: false,
 				semicolons: SemicolonPreference.Remove,
 			})
 

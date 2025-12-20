@@ -1,12 +1,10 @@
-import * as z from "zod"
+import * as z from 'zod'
 
 // Helper schema for JSON fields
 type Literal = boolean | number | string
 type Json = Literal | { [key: string]: Json } | Json[]
 const literalSchema = z.union([z.string(), z.number(), z.boolean()])
-const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
-	z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)])
-)
+const jsonSchema: z.ZodSchema<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]))
 
 export const SpreadsheetModel = z.object({
 	id: z.string(),

@@ -1,5 +1,5 @@
-import * as z from "zod"
-import { Status } from "../prisma/.client"
+import * as z from 'zod'
+import { Status } from '../prisma/.client'
 
 export const DocumentModel = z.object({
 	id: z.string(),

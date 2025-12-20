@@ -1,4 +1,4 @@
-import * as z from "zod"
+import * as z from 'zod'
 
 // Helper schema for JSON fields
 type Literal = boolean | number | string
@@ -13,10 +13,10 @@ export const NativeTypesModel = z.object({
 	title: z.string(),
 	description: z.string().nullish(),
 	slug: z.string(),
-	userId: z.string(),
+	userId: z.string().regex(/^[0-9a-f]{24}$/i),
 	count: z.number().int(),
 	views: z.number().int(),
-	rating: z.number(),
+	rating: z.coerce.number(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	publishedAt: z.date().nullish(),

@@ -1,1 +1,1 @@
-export * from "./nativetypes"
+export * from './nativetypes'

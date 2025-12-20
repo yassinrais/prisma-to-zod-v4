@@ -1,6 +1,6 @@
-import * as z from "zod"
-import { Decimal } from "decimal.js"
-import { Status } from "../prisma/.client"
+import * as z from 'zod'
+import { Decimal } from 'decimal.js'
+import { Status } from '../prisma/.client'
 
 // Helper schema for JSON fields
 type Literal = boolean | number | string
@@ -25,27 +25,27 @@ z.instanceof(Decimal)
 
 export const NativeTypesModel = z.object({
 	id: z.string(),
-	title: z.string(),
+	title: z.string().max(255),
 	charField: z.string().max(100),
 	description: z.string(),
 	tinyText: z.string(),
 	mediumText: z.string(),
 	longText: z.string(),
 	count: z.number().int(),
-	tinyInt: z.number().int().int().min(-128).max(127),
-	smallInt: z.number().int().int().min(-32768).max(32767),
-	mediumInt: z.number().int().int(),
+	tinyInt: z.number().int().min(-128).max(127),
+	smallInt: z.number().int().min(-32768).max(32767),
+	mediumInt: z.number().int(),
 	bigNumber: z.bigint(),
-	unsignedInt: z.number().int(),
+	unsignedInt: z.number().int().min(0),
 	unsignedBig: z.bigint(),
-	price: z.number(),
-	floatVal: z.number(),
-	doubleVal: z.number(),
+	price: z.coerce.number(),
+	floatVal: z.coerce.number(),
+	doubleVal: z.coerce.number(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	dateOnly: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 	timeOnly: z.string().regex(/^\d{2}:\d{2}:\d{2}$/),
-	timestamp: z.string().regex(/^\d{2}:\d{2}:\d{2}$/),
+	timestamp: z.date(),
 	isActive: z.boolean(),
 	binaryData: z.instanceof(Buffer),
 	varbinary: z.instanceof(Buffer),
