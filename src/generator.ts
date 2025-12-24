@@ -174,17 +174,16 @@ export const writeTypeSpecificSchemas = (
 ) => {
 	if (model.fields.some((f) => f.type === 'Json')) {
 		sourceFile.addStatements((writer) => {
-			writer.newLine()
 			writeArray(writer, [
+				'',
 				'// Helper schema for JSON fields',
-				`type Literal = boolean | number | string${config.prismaJsonNullability ? '' : '| null'}`,
+				`type Literal = boolean | number | string${config.prismaJsonNullability ? '' : ' | null'}`,
 				'type Json = Literal | { [key: string]: Json } | Json[]',
 				`const literalSchema = z.union([z.string(), z.number(), z.boolean()${
 					config.prismaJsonNullability ? '' : ', z.null()'
 				}])`,
-				'const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>',
-				'	z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)])',
-				')',
+				// Keep jsonSchema initializer fully on one line
+				'const jsonSchema: z.ZodSchema<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]))',
 			])
 		})
 	}
@@ -242,7 +241,14 @@ export const generateSchemaForModel = (
 									writeArray(writer, getJSDocs(field.documentation))
 									const nativeType = modelNativeTypes.get(field.name)
 									writer
-										.write(`${field.name}: ${getZodConstructor(field, undefined, nativeType)}`)
+										.write(
+											`${field.name}: ${getZodConstructor(
+												field,
+												undefined,
+												nativeType,
+												config.useCoerce
+											)}`
+										)
 										.write(',')
 										.newLine()
 								})
@@ -297,18 +303,32 @@ export const generateRelatedSchemaForModel = (
 				type: `z.ZodSchema<Complete${model.name}>`,
 				initializer(writer) {
 					writer
-						.write(`z.lazy(() => ${modelName(model.name)}.extend(`)
-						.inlineBlock(() => {
-							relationFields.forEach((field) => {
-								writeArray(writer, getJSDocs(field.documentation))
+						.write('z.lazy(() =>')
+						.newLine()
+						.indent(() => {
+							writer
+								.write(`${modelName(model.name)}.extend({`)
+								.newLine()
+								.indent(() => {
+									relationFields.forEach((field) => {
+										writeArray(writer, getJSDocs(field.documentation))
 
-								writer
-									.write(`${field.name}: ${getZodConstructor(field, relatedModelName)}`)
-									.write(',')
-									.newLine()
-							})
+										writer
+											.write(
+												`${field.name}: ${getZodConstructor(
+													field,
+													relatedModelName,
+													null,
+													config.useCoerce
+												)},`
+											)
+											.newLine()
+									})
+								})
+								.write('})')
 						})
-						.write('))')
+						.newLine()
+						.write(')')
 				},
 			},
 		],

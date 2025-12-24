@@ -131,6 +131,7 @@ const ftForDir = (dir: string) => async () => {
 describe('Functional Tests', () => {
 	test('Multiple Schema', ftForDir('multiple-schema'))
 	test('Basic', ftForDir('basic'))
+	test('Use Coerce', ftForDir('coerce'))
 	test('Native types (Postgres)', ftForDir('native-types/pg'))
 	test('Native types (Mongodb)', ftForDir('native-types/mongodb'))
 	test('Native types (SQL Server)', ftForDir('native-types/sql-server'))

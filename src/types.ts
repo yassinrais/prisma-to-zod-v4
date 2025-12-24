@@ -5,27 +5,29 @@ export const getZodConstructor = (
 	field: DMMF.Field,
 	getRelatedModelName = (name: string | DMMF.SchemaEnum | DMMF.OutputType | DMMF.SchemaArg) =>
 		name.toString(),
-	nativeType?: string
+	nativeType?: string | null,
+	useCoerce?: boolean
 ) => {
 	let zodType = 'z.unknown()'
-	let extraModifiers: string[] = ['']
+	const zodVar = useCoerce ? 'z.coerce' : 'z'
+	const extraModifiers: string[] = ['']
 
 	if (field.kind === 'scalar') {
 		switch (field.type) {
 			case 'String':
-				zodType = 'z.string()'
+				zodType = zodVar + '.string()'
 				// PostgreSQL
 				if (nativeType?.match(/^Uuid/)) zodType = 'z.uuid()'
-				else if (nativeType?.match(/^Citext/)) zodType = 'z.string().toLowerCase()'
+				else if (nativeType?.match(/^Citext/)) zodType = zodVar + '.string().toLowerCase()'
 				else if (nativeType?.match(/^VarChar\(\d+\)/)) {
 					const length = nativeType.match(/VarChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
 				} else if (nativeType?.match(/^Char\(\d+\)/)) {
 					const length = nativeType.match(/Char\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
-				} else if (nativeType?.match(/^Text/)) zodType = 'z.string()'
-				else if (nativeType?.match(/^VarBit/)) zodType = 'z.string()'
-				else if (nativeType?.match(/^Bit/)) zodType = 'z.string()'
+				} else if (nativeType?.match(/^Text/)) zodType = zodVar + '.string()'
+				else if (nativeType?.match(/^VarBit/)) zodType = zodVar + '.string()'
+				else if (nativeType?.match(/^Bit/)) zodType = zodVar + '.string()'
 				// MySQL
 				else if (nativeType?.match(/^VarBinary/)) zodType = 'z.unknown()'
 				else if (nativeType?.match(/^Binary/)) zodType = 'z.unknown()'
@@ -36,13 +38,13 @@ export const getZodConstructor = (
 				} else if (nativeType?.match(/^NChar\(\d+\)/)) {
 					const length = nativeType.match(/NChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
-				} else if (nativeType?.match(/^NText/)) zodType = 'z.string()'
+				} else if (nativeType?.match(/^NText/)) zodType = zodVar + '.string()'
 				// MongoDB
 				else if (nativeType?.match(/^ObjectId/)) extraModifiers.push('regex(/^[0-9a-f]{24}$/i)')
 				break
 
 			case 'Int':
-				zodType = 'z.number()'
+				zodType = zodVar + '.number()'
 				extraModifiers.push('int()')
 				// PostgreSQL
 				if (nativeType?.match(/^SmallInt/)) extraModifiers.push('min(-32768)', 'max(32767)')
@@ -54,15 +56,15 @@ export const getZodConstructor = (
 				break
 
 			case 'BigInt':
-				zodType = 'z.bigint()'
+				zodType = zodVar + '.bigint()'
 				break
 
 			case 'Float':
-				zodType = 'z.coerce.number()'
+				zodType = zodVar + '.number()'
 				break
 
 			case 'Decimal':
-				zodType = 'z.coerce.number()'
+				zodType = zodVar + '.number()'
 				if (nativeType?.match(/^Numeric\(\d+,\d+\)/)) {
 					const match = nativeType.match(/Numeric\((\d+),(\d+)\)/)
 					if (match) {
@@ -87,23 +89,25 @@ export const getZodConstructor = (
 				break
 
 			case 'DateTime':
-				zodType = 'z.date()'
+				zodType = zodVar + '.date()'
 				// PostgreSQL
-				if (nativeType?.match(/^TimestampTz/)) zodType = 'z.date()'
-				else if (nativeType?.match(/^Timestamp/)) zodType = 'z.date()'
+				if (nativeType?.match(/^TimestampTz/)) zodType = zodVar + '.date()'
+				else if (nativeType?.match(/^Timestamp/)) zodType = zodVar + '.date()'
 				else if (nativeType?.match(/^TimeTz/))
-					zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$/)'
-				else if (nativeType?.match(/^Time/)) zodType = 'z.string().regex(/^\\d{2}:\\d{2}:\\d{2}$/)'
-				else if (nativeType?.match(/^Date/)) zodType = 'z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/)'
+					zodType = zodVar + '.string().regex(/^\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$/)'
+				else if (nativeType?.match(/^Time/))
+					zodType = zodVar + '.string().regex(/^\\d{2}:\\d{2}:\\d{2}$/)'
+				else if (nativeType?.match(/^Date/))
+					zodType = zodVar + '.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/)'
 				// MySQL
-				else if (nativeType?.match(/^DateTime/)) zodType = 'z.date()'
+				else if (nativeType?.match(/^DateTime/)) zodType = zodVar + '.date()'
 				// SQL Server
-				else if (nativeType?.match(/^DateTimeOffset/)) zodType = 'z.date()'
-				else if (nativeType?.match(/^DateTime2/)) zodType = 'z.date()'
+				else if (nativeType?.match(/^DateTimeOffset/)) zodType = zodVar + '.date()'
+				else if (nativeType?.match(/^DateTime2/)) zodType = zodVar + '.date()'
 				break
 
 			case 'Boolean':
-				zodType = 'z.boolean()'
+				zodType = zodVar + '.boolean()'
 				break
 
 			case 'Bytes':

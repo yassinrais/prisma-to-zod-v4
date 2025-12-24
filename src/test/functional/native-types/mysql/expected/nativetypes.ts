@@ -6,9 +6,7 @@ import { Status } from '../prisma/.client'
 type Literal = boolean | number | string
 type Json = Literal | { [key: string]: Json } | Json[]
 const literalSchema = z.union([z.string(), z.number(), z.boolean()])
-const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
-	z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)])
-)
+const jsonSchema: z.ZodSchema<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]))
 
 // Helper schema for Decimal fields
 z.instanceof(Decimal)
@@ -38,9 +36,9 @@ export const NativeTypesModel = z.object({
 	bigNumber: z.bigint(),
 	unsignedInt: z.number().int().min(0),
 	unsignedBig: z.bigint(),
-	price: z.coerce.number(),
-	floatVal: z.coerce.number(),
-	doubleVal: z.coerce.number(),
+	price: z.number(),
+	floatVal: z.number(),
+	doubleVal: z.number(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	dateOnly: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

@@ -125,27 +125,38 @@ This project uses pnpm.
 
     ```prisma
     generator zod {
-      provider                 = "prisma-to-zod-v4"
-      output                   = "./zod" // (default) the directory where generated zod schemas will be saved
+			provider = "prisma-to-zod-v4"
 
-      relationModel            = true // (default) Create and export both plain and related models.
-      // relationModel         = "default" // Do not export model without relations.
-      // relationModel         = false // Do not generate related model
+			// Output directory for generated Zod schemas
+			output = "./zod" // default
 
-      modelCase                = "PascalCase" // (default) Output models using pascal case (ex. UserModel, PostModel)
-      // modelCase             = "camelCase" // Output models using camel case (ex. userModel, postModel)
+			// Relation model generation
+			relationModel = true        // default: generate both plain and related models
+			// relationModel = "default" // generate only related models (no plain models)
+			// relationModel = false     // disable related model generation
 
-      modelSuffix              = "Model" // (default) Suffix to apply to your prisma models when naming Zod schemas
+			// Naming conventions
+			modelCase   = "PascalCase" // default: UserModel, PostModel
+			// modelCase = "camelCase" // userModel, postModel
 
-      // useDecimalJs          = false // (default) represent the prisma Decimal type using as a JS number
-      useDecimalJs             = true // represent the prisma Decimal type using Decimal.js (as Prisma does)
+			// Suffix appended to generated Zod schemas
+			modelSuffix = "Model" // default
 
-      imports                  = null // (default) will import the referenced file in generated schemas to be used via imports.someExportedVariable
+			// Decimal handling
+			// useDecimalJs = false // default: represent Prisma Decimal as number
+			useDecimalJs  = true  // represent Prisma Decimal using Decimal.js (matches Prisma behavior)
 
-      // https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-by-null-values
-      prismaJsonNullability    = true // (default) uses prisma's scheme for JSON field nullability
-      // prismaJsonNullability = false // allows null assignment to optional JSON fields
-    }
+			// Enable coercion for input schemas (e.g. strings → numbers, dates)
+			useCoerce = true
+
+			// Custom imports for generated schemas
+			imports = null // default: no additional imports
+
+			// JSON field nullability behavior
+			// See: https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-by-null-values
+			prismaJsonNullability = true  // default: follow Prisma's JSON nullability rules
+			// prismaJsonNullability = false // allow null assignment to optional JSON fields
+		}
     ```
 
 3.  Run `npx prisma generate` or `pnpm prisma generate` to generate your zod schemas

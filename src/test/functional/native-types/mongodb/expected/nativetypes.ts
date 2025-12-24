@@ -4,9 +4,7 @@ import * as z from 'zod'
 type Literal = boolean | number | string
 type Json = Literal | { [key: string]: Json } | Json[]
 const literalSchema = z.union([z.string(), z.number(), z.boolean()])
-const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
-	z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)])
-)
+const jsonSchema: z.ZodSchema<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]))
 
 export const NativeTypesModel = z.object({
 	id: z.string().regex(/^[0-9a-f]{24}$/i),
@@ -16,7 +14,7 @@ export const NativeTypesModel = z.object({
 	userId: z.string().regex(/^[0-9a-f]{24}$/i),
 	count: z.number().int(),
 	views: z.number().int(),
-	rating: z.coerce.number(),
+	rating: z.number(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	publishedAt: z.date().nullish(),
