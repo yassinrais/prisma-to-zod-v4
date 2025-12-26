@@ -1,4 +1,5 @@
 import type { DMMF } from '@prisma/generator-helper'
+import type { Config } from './config'
 import { computeCustomSchema, computeModifiers } from './docs'
 
 export const getZodConstructor = (
@@ -6,9 +7,10 @@ export const getZodConstructor = (
 	getRelatedModelName = (name: string | DMMF.SchemaEnum | DMMF.OutputType | DMMF.SchemaArg) =>
 		name.toString(),
 	nativeType?: string | null,
-	useCoerce?: boolean
+	config?: Config
 ) => {
 	let zodType = 'z.unknown()'
+	const useCoerce = config?.useCoerce ?? false
 	const zodVar = useCoerce ? 'z.coerce' : 'z'
 	const extraModifiers: string[] = ['']
 
@@ -130,7 +132,12 @@ export const getZodConstructor = (
 				break
 		}
 	} else if (field.kind === 'enum') {
-		zodType = `z.enum(${field.type})`
+		if (config?.useStandaloneEnums) {
+			const camelCase = field.type.charAt(0).toLowerCase() + field.type.slice(1)
+			zodType = `${camelCase}Schema`
+		} else {
+			zodType = `z.enum(${field.type})`
+		}
 	} else if (field.kind === 'object') {
 		zodType = getRelatedModelName(field.type)
 	}

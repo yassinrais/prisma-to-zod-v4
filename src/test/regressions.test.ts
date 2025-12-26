@@ -39,7 +39,7 @@ describe('Regression Tests', () => {
 		writeImportsForModel(model as never, testFile, config, prismaOptions)
 
 		expect(testFile.print()).toBe(
-			"import * as z from 'zod';\nimport { UserType } from '@prisma/client';\n"
+			"import * as z from 'zod';\nimport { userTypeSchema } from './enums';\n"
 		)
 	})
 })

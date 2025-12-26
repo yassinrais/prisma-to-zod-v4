@@ -7,7 +7,7 @@ import glob from 'fast-glob'
 import { Project, QuoteKind } from 'ts-morph'
 import { SemicolonPreference } from 'typescript'
 import { configSchema, PrismaOptions } from '../../config'
-import { generateBarrelFile, populateModelFile } from '../../generator'
+import { generateBarrelFile, generateEnumsFile, populateModelFile } from '../../generator'
 
 /**
  * Read all .prisma files from a directory and combine them
@@ -79,7 +79,7 @@ const ftForDir = (dir: string) => async () => {
 		{ overwrite: true }
 	)
 
-	generateBarrelFile(dmmf.datamodel.models as never, indexFile)
+	generateBarrelFile(dmmf.datamodel.models as never, indexFile, config, dmmf.datamodel.enums.length > 0)
 
 	indexFile.formatText({
 		indentSize: 2,
@@ -88,6 +88,30 @@ const ftForDir = (dir: string) => async () => {
 	})
 
 	await indexFile.save()
+
+	if (config.useStandaloneEnums && dmmf.datamodel.enums.length > 0) {
+		const enumsFile = project.createSourceFile(
+			path.join(outputPath, 'enums.ts'),
+			{},
+			{ overwrite: true }
+		)
+
+		generateEnumsFile(dmmf.datamodel.enums as never, enumsFile)
+
+		enumsFile.formatText({
+			indentSize: 2,
+			convertTabsToSpaces: false,
+			semicolons: SemicolonPreference.Remove,
+		})
+
+		await enumsFile.save()
+
+		const actualEnumsContents = await readFile(path.join(actualDir, 'enums.ts'), 'utf-8')
+		const expectedEnumsFile = path.resolve(expectedDir, 'enums.ts')
+		const expectedEnumsContents = await readFile(expectedEnumsFile, 'utf-8')
+
+		expect(actualEnumsContents).toStrictEqual(expectedEnumsContents)
+	}
 
 	const actualIndexContents = await readFile(path.join(actualDir, 'index.ts'), 'utf-8')
 
@@ -132,6 +156,7 @@ describe('Functional Tests', () => {
 	test('Multiple Schema', ftForDir('multiple-schema'))
 	test('Basic', ftForDir('basic'))
 	test('Use Coerce', ftForDir('coerce'))
+	test('Standalone Enums', ftForDir('standalone-enums'))
 	test('Native types (Postgres)', ftForDir('native-types/pg'))
 	test('Native types (Mongodb)', ftForDir('native-types/mongodb'))
 	test('Native types (SQL Server)', ftForDir('native-types/sql-server'))

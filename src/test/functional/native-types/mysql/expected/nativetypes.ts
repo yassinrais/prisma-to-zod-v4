@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { Decimal } from 'decimal.js'
-import { Status } from '../prisma/.client'
+import { statusSchema } from './enums'
 
 // Helper schema for JSON fields
 type Literal = boolean | number | string
@@ -53,5 +53,5 @@ export const NativeTypesModel = z.object({
 	longBlob: z.instanceof(Buffer),
 	metadata: jsonSchema,
 	config: jsonSchema,
-	status: z.enum(Status),
+	status: statusSchema,
 })

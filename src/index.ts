@@ -5,7 +5,7 @@ import { generatorHandler } from '@prisma/generator-helper'
 import { SemicolonPreference } from 'typescript'
 import path from 'path'
 import { configSchema, PrismaOptions } from './config'
-import { populateModelFile, generateBarrelFile } from './generator'
+import { populateModelFile, generateBarrelFile, generateEnumsFile } from './generator'
 import { Project, QuoteKind } from 'ts-morph'
 
 generatorHandler({
@@ -24,6 +24,7 @@ generatorHandler({
 		})
 
 		const models = [...options.dmmf.datamodel.models]
+		const enums = [...options.dmmf.datamodel.enums]
 
 		const schemaPath = options.schemaPath
 		// Get the directory containing the schema file(s)
@@ -49,13 +50,25 @@ generatorHandler({
 
 		const indexFile = project.createSourceFile(`${outputPath}/index.ts`, {}, { overwrite: true })
 
-		generateBarrelFile(models, indexFile)
+		generateBarrelFile(models, indexFile, config, enums.length > 0)
 
 		indexFile.formatText({
 			indentSize: 2,
 			convertTabsToSpaces: true,
 			semicolons: SemicolonPreference.Remove,
 		})
+
+		if (config.useStandaloneEnums && enums.length > 0) {
+			const enumsFile = project.createSourceFile(`${outputPath}/enums.ts`, {}, { overwrite: true })
+
+			generateEnumsFile(enums, enumsFile)
+
+			enumsFile.formatText({
+				indentSize: 2,
+				convertTabsToSpaces: true,
+				semicolons: SemicolonPreference.Remove,
+			})
+		}
 
 		models.forEach((model) => {
 			const sourceFile = project.createSourceFile(

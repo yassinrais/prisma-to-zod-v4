@@ -1,12 +1,10 @@
 import * as z from 'zod'
 import { statusSchema } from './enums'
 
-export const DocumentModel = z.object({
+export const PostModel = z.object({
 	id: z.string(),
-	filename: z.string(),
-	author: z.string(),
-	contents: z.string(),
+	title: z.string(),
 	status: statusSchema,
+	tags: statusSchema.array(),
 	created: z.date(),
-	updated: z.date(),
 })

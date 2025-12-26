@@ -1,0 +1,48 @@
+datasource db {
+  provider = "postgresql"
+  url      = ""
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = ".client"
+}
+
+generator zod {
+  provider           = "zod-prisma"
+  output             = "../actual/"
+  useStandaloneEnums = "true"
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum LowerCaseRole {
+  user
+  admin
+  moderator
+}
+
+model Post {
+  id      String   @id @default(cuid())
+  title   String
+  status  Status
+  tags    Status[]
+  created DateTime @default(now())
+}
+
+model User {
+  id     String @id @default(cuid())
+  email  String @unique
+  role   Role
+  backup Role?
+}

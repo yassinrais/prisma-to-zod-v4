@@ -141,12 +141,28 @@ export const writeImportsForModel = (
 	const relativePath = path.relative(outputPath, clientPath)
 
 	if (enumFields.length > 0) {
-		importList.push({
-			kind: StructureKind.ImportDeclaration,
-			isTypeOnly: enumFields.length === 0,
-			moduleSpecifier: dotSlash(relativePath),
-			namedImports: enumFields.map((f) => f.type),
-		})
+		if (config.useStandaloneEnums) {
+			const uniqueEnumSchemas = Array.from(
+				new Set(
+					enumFields.map((f) => {
+						const camelCase = f.type.charAt(0).toLowerCase() + f.type.slice(1)
+						return `${camelCase}Schema`
+					})
+				)
+			)
+			importList.push({
+				kind: StructureKind.ImportDeclaration,
+				moduleSpecifier: './enums',
+				namedImports: uniqueEnumSchemas,
+			})
+		} else {
+			importList.push({
+				kind: StructureKind.ImportDeclaration,
+				isTypeOnly: false,
+				moduleSpecifier: dotSlash(relativePath),
+				namedImports: enumFields.map((f) => f.type),
+			})
+		}
 	}
 
 	if (config.relationModel !== false && relationFields.length > 0) {
@@ -242,12 +258,7 @@ export const generateSchemaForModel = (
 									const nativeType = modelNativeTypes.get(field.name)
 									writer
 										.write(
-											`${field.name}: ${getZodConstructor(
-												field,
-												undefined,
-												nativeType,
-												config.useCoerce
-											)}`
+											`${field.name}: ${getZodConstructor(field, undefined, nativeType, config)}`
 										)
 										.write(',')
 										.newLine()
@@ -319,7 +330,7 @@ export const generateRelatedSchemaForModel = (
 													field,
 													relatedModelName,
 													null,
-													config.useCoerce
+													config
 												)},`
 											)
 											.newLine()
@@ -348,10 +359,52 @@ export const populateModelFile = (
 		generateRelatedSchemaForModel(model, sourceFile, config, prismaOptions)
 }
 
-export const generateBarrelFile = (models: DMMF.Model[], indexFile: SourceFile) => {
+export const generateBarrelFile = (
+	models: DMMF.Model[],
+	indexFile: SourceFile,
+	config?: Config,
+	hasEnums?: boolean
+) => {
+	if (config?.useStandaloneEnums && hasEnums) {
+		indexFile.addExportDeclaration({
+			moduleSpecifier: './enums',
+		})
+	}
+
 	models.forEach((model) => {
 		indexFile.addExportDeclaration({
 			moduleSpecifier: `./${model.name.toLowerCase()}`,
+		})
+	})
+}
+
+export const generateEnumsFile = (enums: DMMF.DatamodelEnum[], sourceFile: SourceFile) => {
+	sourceFile.addImportDeclaration({
+		kind: StructureKind.ImportDeclaration,
+		namespaceImport: 'z',
+		moduleSpecifier: 'zod',
+	})
+
+	enums.forEach((enumDef) => {
+		const values = enumDef.values.map((v) => v.name)
+		const enumInitializer = `z.enum([${values.map((v) => `'${v}'`).join(', ')}])`
+		const camelCaseName = enumDef.name.charAt(0).toLowerCase() + enumDef.name.slice(1)
+
+		sourceFile.addVariableStatement({
+			isExported: true,
+			declarationKind: VariableDeclarationKind.Const,
+			declarations: [
+				{
+					name: `${camelCaseName}Schema`,
+					initializer: enumInitializer,
+				},
+			],
+		})
+
+		sourceFile.addTypeAlias({
+			isExported: true,
+			name: `${enumDef.name}Schema`,
+			type: `z.infer<typeof ${camelCaseName}Schema>`,
 		})
 	})
 }

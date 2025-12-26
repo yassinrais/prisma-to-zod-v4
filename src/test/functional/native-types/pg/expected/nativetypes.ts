@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { Decimal } from 'decimal.js'
-import { Status } from '../prisma/.client'
+import { statusSchema } from './enums'
 
 // Helper schema for JSON fields
 type Literal = boolean | number | string
@@ -55,7 +55,7 @@ export const NativeTypesModel = z.object({
 	tags: z.string().array(),
 	ratings: z.number().int().array(),
 	flags: z.boolean().array(),
-	status: z.enum(Status),
+	status: statusSchema,
 	created: z.date(),
 	updated: z.date(),
 })
