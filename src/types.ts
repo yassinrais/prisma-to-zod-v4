@@ -11,17 +11,24 @@ export const getZodConstructor = (
 ) => {
 	let zodType = 'z.unknown()'
 	const useCoerce = config?.useCoerce ?? false
+	const useMinLength = config?.useMinLength ?? false
+	const useTrimStrings = config?.useTrimStrings ?? false
 	const zodVar = useCoerce ? 'z.coerce' : 'z'
 	const extraModifiers: string[] = ['']
 
 	if (field.kind === 'scalar') {
 		switch (field.type) {
-			case 'String':
+			case 'String': {
 				zodType = zodVar + '.string()'
+				let isSpecialStringType = false
 				// PostgreSQL
-				if (nativeType?.match(/^Uuid/)) zodType = 'z.uuid()'
-				else if (nativeType?.match(/^Citext/)) zodType = zodVar + '.string().toLowerCase()'
-				else if (nativeType?.match(/^VarChar\(\d+\)/)) {
+				if (nativeType?.match(/^Uuid/)) {
+					zodType = 'z.uuid()'
+					isSpecialStringType = true
+				} else if (nativeType?.match(/^Citext/)) {
+					zodType = zodVar + '.string().toLowerCase()'
+					isSpecialStringType = true
+				} else if (nativeType?.match(/^VarChar\(\d+\)/)) {
 					const length = nativeType.match(/VarChar\((\d+)\)/)?.[1]
 					if (length) extraModifiers.push(`max(${length})`)
 				} else if (nativeType?.match(/^Char\(\d+\)/)) {
@@ -42,8 +49,18 @@ export const getZodConstructor = (
 					if (length) extraModifiers.push(`max(${length})`)
 				} else if (nativeType?.match(/^NText/)) zodType = zodVar + '.string()'
 				// MongoDB
-				else if (nativeType?.match(/^ObjectId/)) extraModifiers.push('regex(/^[0-9a-f]{24}$/i)')
+				else if (nativeType?.match(/^ObjectId/)) {
+					extraModifiers.push('regex(/^[0-9a-f]{24}$/i)')
+					isSpecialStringType = true
+				}
+
+				// Apply trim and minLength for required string fields (except special types like UUID, ObjectId, etc.)
+				if (field.isRequired && useMinLength && !isSpecialStringType) {
+					if (useTrimStrings) extraModifiers.push('trim()')
+					extraModifiers.push('min(1)')
+				}
 				break
+			}
 
 			case 'Int':
 				zodType = zodVar + '.number()'

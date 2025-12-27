@@ -171,6 +171,8 @@ describe('Functional Tests', () => {
 	test('JSON', ftForDir('json'))
 	test('Optional fields', ftForDir('optional'))
 	test('Config Import', ftForDir('config-import'))
+	test('Min Length with Trim', ftForDir('minlength'))
+	test('Min Length Only', ftForDir('minlength-only'))
 
 	test('Type Check Everything', async () => {
 		const typeCheckResults = await execa(

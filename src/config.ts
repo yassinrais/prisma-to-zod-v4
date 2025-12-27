@@ -12,6 +12,8 @@ export const configSchema = z.object({
 	useStandaloneEnums: configBoolean.default(true),
 	relationModel: z.union([z.literal('default'), configBoolean.default(true)]),
 	prismaJsonNullability: configBoolean.default(true),
+	useMinLength: configBoolean.default(false),
+	useTrimStrings: configBoolean.default(false),
 })
 
 export type Config = z.infer<typeof configSchema>
