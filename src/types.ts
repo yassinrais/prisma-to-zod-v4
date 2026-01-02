@@ -13,6 +13,7 @@ export const getZodConstructor = (
 	const useCoerce = config?.useCoerce ?? false
 	const useMinLength = config?.useMinLength ?? false
 	const useTrimStrings = config?.useTrimStrings ?? false
+	const usePrefaultEmptyString = config?.usePrefaultEmptyString ?? false
 	const zodVar = useCoerce ? 'z.coerce' : 'z'
 	const extraModifiers: string[] = ['']
 
@@ -58,6 +59,9 @@ export const getZodConstructor = (
 				if (field.isRequired && useMinLength && !isSpecialStringType) {
 					if (useTrimStrings) extraModifiers.push('trim()')
 					extraModifiers.push('min(1)')
+					if (useTrimStrings && usePrefaultEmptyString) {
+						extraModifiers.push('prefault("")')
+					}
 				}
 				break
 			}

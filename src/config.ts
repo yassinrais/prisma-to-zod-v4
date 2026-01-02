@@ -14,6 +14,7 @@ export const configSchema = z.object({
 	prismaJsonNullability: configBoolean.default(true),
 	useMinLength: configBoolean.default(false),
 	useTrimStrings: configBoolean.default(false),
+	usePrefaultEmptyString: configBoolean.default(false),
 })
 
 export type Config = z.infer<typeof configSchema>

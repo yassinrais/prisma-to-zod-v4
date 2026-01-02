@@ -1,24 +1,3 @@
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Thanks again! Now go create something AMAZING! :D
-***
-***
-***
-*** To avoid retyping too much info. Do a search and replace for the following:
-*** CarterGrimmeisen, zod-prisma, twitter_handle, Carter.Grimmeisen@uah.edu, Zod Prisma, A custom prisma generator that creates Zod schemas from your Prisma model.
--->
-
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-
 [![NPM][npm-shield]][npm-url]
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -74,6 +53,7 @@
         <li><a href="#custom-zod-schema">Custom Zod Schemas</a></li>
         </ul>
       </li>
+      <li><a href="#string-validation-options">String Validation Options</a></li>
       <li><a href="#json-fields">JSON Fields</a></li>
       </ul>
     </li>
@@ -96,9 +76,9 @@ This provides a way of automatically generating them with your prisma
 
 ### Built With
 
--   [dts-cli](https://github.com/weiran-zsd/dts-cli)
--   [Zod](https://github.com/colinhacks/zod)
--   [Based on this gist](https://gist.github.com/deckchairlabs/8a11c33311c01273deec7e739417dbc9)
+- [dts-cli](https://github.com/weiran-zsd/dts-cli)
+- [Zod](https://github.com/colinhacks/zod)
+- [Based on this gist](https://gist.github.com/deckchairlabs/8a11c33311c01273deec7e739417dbc9)
 
 <!-- GETTING STARTED -->
 
@@ -125,38 +105,43 @@ This project uses pnpm.
 
     ```prisma
     generator zod {
-			provider = "prisma-to-zod-v4"
+    		provider = "prisma-to-zod-v4"
 
-			// Output directory for generated Zod schemas
-			output = "./zod" // default
+    		// Output directory for generated Zod schemas
+    		output = "./zod" // default
 
-			// Relation model generation
-			relationModel = true        // default: generate both plain and related models
-			// relationModel = "default" // generate only related models (no plain models)
-			// relationModel = false     // disable related model generation
+    		// Relation model generation
+    		relationModel = true        // default: generate both plain and related models
+    		// relationModel = "default" // generate only related models (no plain models)
+    		// relationModel = false     // disable related model generation
 
-			// Naming conventions
-			modelCase   = "PascalCase" // default: UserModel, PostModel
-			// modelCase = "camelCase" // userModel, postModel
+    		// Naming conventions
+    		modelCase   = "PascalCase" // default: UserModel, PostModel
+    		// modelCase = "camelCase" // userModel, postModel
 
-			// Suffix appended to generated Zod schemas
-			modelSuffix = "Model" // default
+    		// Suffix appended to generated Zod schemas
+    		modelSuffix = "Model" // default
 
-			// Decimal handling
-			// useDecimalJs = false // default: represent Prisma Decimal as number
-			useDecimalJs  = true  // represent Prisma Decimal using Decimal.js (matches Prisma behavior)
+    		// Decimal handling
+    		// useDecimalJs = false // default: represent Prisma Decimal as number
+    		useDecimalJs  = true  // represent Prisma Decimal using Decimal.js (matches Prisma behavior)
 
-			// Enable coercion for input schemas (e.g. strings → numbers, dates)
-			useCoerce = true
+    		// Enable coercion for input schemas (e.g. strings → numbers, dates)
+    		useCoerce = true
 
-			// Custom imports for generated schemas
-			imports = null // default: no additional imports
+    		// Custom imports for generated schemas
+    		imports = null // default: no additional imports
 
-			// JSON field nullability behavior
-			// See: https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-by-null-values
-			prismaJsonNullability = true  // default: follow Prisma's JSON nullability rules
-			// prismaJsonNullability = false // allow null assignment to optional JSON fields
-		}
+    		// JSON field nullability behavior
+    		// See: https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-by-null-values
+    		prismaJsonNullability = true  // default: follow Prisma's JSON nullability rules
+    		// prismaJsonNullability = false // allow null assignment to optional JSON fields
+
+    		// String validation options
+    		useMinLength = true  // default: false - adds .min(1) to required string fields
+    		useTrimStrings = true  // default: false - adds .trim() to required string fields (requires useMinLength)
+    		usePrefaultEmptyString = true  // default: false - adds .prefault("") to handle undefined values (requires useTrimStrings and useMinLength)
+    	}
     ```
 
 3.  Run `npx prisma generate` or `pnpm prisma generate` to generate your zod schemas
@@ -228,7 +213,7 @@ Generated code:
 ```ts
 export const PostModel = z.object({
 	id: z.string().uuid(),
-	title: z.string().max(255, { message: "The title must be shorter than 256 characters" }),
+	title: z.string().max(255, { message: 'The title must be shorter than 256 characters' }),
 	contents: z.string().max(10240),
 })
 ```
@@ -254,7 +239,7 @@ The referenced file can then be used by simply referring to exported members via
 The generated zod schema files will now include a namespaced import like the following.
 
 ```typescript
-import * as imports from "../../src/zod-schemas"
+import * as imports from '../../src/zod-schemas'
 ```
 
 #### Custom Zod Schema
@@ -264,6 +249,68 @@ This can be accomplished by using the special comment directive `@zod.custom()`.
 By specifying the custom schema within the parentheses you can replace the autogenerated type that would normally be assigned to the field.
 
 > For instance if you wanted to use `z.preprocess`
+
+### String Validation Options
+
+prisma-to-zod-v4 provides three configuration options to enhance string field validation:
+
+#### `useMinLength`
+
+Adds `.min(1)` validation to required string fields, ensuring they are not empty strings.
+
+```prisma
+model User {
+  name String // required field
+  bio  String? // optional field
+}
+```
+
+With `useMinLength = true`:
+
+```ts
+export const UserModel = z.object({
+	name: z.string().min(1), // required → gets .min(1)
+	bio: z.string().nullish(), // optional → no .min(1)
+})
+```
+
+#### `useTrimStrings`
+
+Adds `.trim()` to required string fields when used with `useMinLength`. This automatically trims whitespace before validation.
+
+With `useMinLength = true` and `useTrimStrings = true`:
+
+```ts
+export const UserModel = z.object({
+	name: z.string().trim().min(1),
+	bio: z.string().nullish(),
+})
+```
+
+#### `usePrefaultEmptyString`
+
+Adds `.prefault("")` to handle undefined values. When enabled (requires both `useMinLength` and `useTrimStrings`), undefined values are converted to empty strings before processing. This ensures consistent behavior when validation fails - the value will be `""` instead of `undefined`.
+
+With all three options enabled:
+
+```ts
+export const UserModel = z.object({
+	name: z.string().trim().min(1).prefault(''),
+	bio: z.string().nullish(),
+})
+```
+
+**Behavior comparison:**
+
+```ts
+// Without prefault:
+schema.safeParse(undefined) // { success: false, data: undefined }
+
+// With prefault:
+schema.safeParse(undefined) // { success: false } but undefined → "" in processing
+```
+
+> **Note:** `usePrefaultEmptyString` only works when both `useMinLength` and `useTrimStrings` are enabled.
 
 ### JSON Fields
 
@@ -302,14 +349,6 @@ Contributions are what make the open source community such an amazing place to b
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
-<!-- CONTACT -->
-
-## Contact
-
-Carter Grimmeisen - Carter.Grimmeisen@uah.edu
-
-Project Link: [https://github.com/CarterGrimmeisen/zod-prisma](https://github.com/CarterGrimmeisen/zod-prisma)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->

@@ -106,6 +106,30 @@ describe('types Package', () => {
 		expect(constructor).toBe('z.string().trim().min(1)')
 	})
 
+	test('useTrimStrings, useMinLength and usePrefaultEmptyString - required string gets trim().min(1).prefault("")', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: false,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'title',
+			type: 'String',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {
+			useMinLength: true,
+			useTrimStrings: true,
+			usePrefaultEmptyString: true
+		})
+
+		expect(constructor).toBe('z.string().trim().min(1).prefault("")')
+	})
+
 	test('useTrimStrings alone - required string gets trim() but not min(1)', () => {
 		const field: DMMF.Field = {
 			hasDefaultValue: false,
@@ -148,7 +172,7 @@ describe('types Package', () => {
 		expect(constructor).toBe('z.string().max(255).min(1)')
 	})
 
-	test('useMinLength with VarChar and trim - includes trim, max, and min', () => {
+	test('useMinLength with VarChar and trim - includes max, trim, and min', () => {
 		const field: DMMF.Field = {
 			hasDefaultValue: false,
 			isGenerated: false,
@@ -169,6 +193,30 @@ describe('types Package', () => {
 		})
 
 		expect(constructor).toBe('z.string().max(255).trim().min(1)')
+	})
+
+	test('useMinLength with VarChar, trim and prefault - includes max, trim, min and prefault', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: false,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'title',
+			type: 'String',
+		}
+
+		const constructor = getZodConstructor(field, undefined, 'VarChar(255)', {
+			useMinLength: true,
+			useTrimStrings: true,
+			usePrefaultEmptyString: true
+		})
+
+		expect(constructor).toBe('z.string().max(255).trim().min(1).prefault("")')
 	})
 
 	test('useMinLength does not affect uuid strings', () => {
