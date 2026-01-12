@@ -7,6 +7,7 @@ export const configSchema = z.object({
 	imports: z.string().optional(),
 	modelSuffix: z.string().default('Model'),
 	modelCase: z.enum(['PascalCase', 'camelCase']).default('PascalCase'),
+	zodImportPath: z.enum(['zod', 'zod/v3', 'zod/v4']).default('zod'),
 	useCoerce: configBoolean.default(false),
 	useDecimalJs: configBoolean.default(true),
 	useStandaloneEnums: configBoolean.default(true),

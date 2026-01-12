@@ -61,7 +61,7 @@ generatorHandler({
 		if (config.useStandaloneEnums && enums.length > 0) {
 			const enumsFile = project.createSourceFile(`${outputPath}/enums.ts`, {}, { overwrite: true })
 
-			generateEnumsFile(enums, enumsFile)
+			generateEnumsFile(enums, enumsFile, config)
 
 			enumsFile.formatText({
 				indentSize: 2,

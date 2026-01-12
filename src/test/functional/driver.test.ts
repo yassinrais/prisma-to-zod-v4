@@ -96,7 +96,7 @@ const ftForDir = (dir: string) => async () => {
 			{ overwrite: true }
 		)
 
-		generateEnumsFile(dmmf.datamodel.enums as never, enumsFile)
+		generateEnumsFile(dmmf.datamodel.enums as never, enumsFile, config)
 
 		enumsFile.formatText({
 			indentSize: 2,
@@ -173,6 +173,8 @@ describe('Functional Tests', () => {
 	test('Config Import', ftForDir('config-import'))
 	test('Min Length with Trim', ftForDir('minlength'))
 	test('Min Length Only', ftForDir('minlength-only'))
+	test('Zod Import Path - v4', ftForDir('zod-import-v4'))
+	test('Zod Import Path - v3', ftForDir('zod-import-v3'))
 
 	test('Type Check Everything', async () => {
 		const typeCheckResults = await execa(

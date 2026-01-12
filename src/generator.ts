@@ -109,7 +109,7 @@ export const writeImportsForModel = (
 		{
 			kind: StructureKind.ImportDeclaration,
 			namespaceImport: 'z',
-			moduleSpecifier: 'zod',
+			moduleSpecifier: config.zodImportPath,
 		},
 	]
 
@@ -378,11 +378,11 @@ export const generateBarrelFile = (
 	})
 }
 
-export const generateEnumsFile = (enums: DMMF.DatamodelEnum[], sourceFile: SourceFile) => {
+export const generateEnumsFile = (enums: DMMF.DatamodelEnum[], sourceFile: SourceFile, config: Config) => {
 	sourceFile.addImportDeclaration({
 		kind: StructureKind.ImportDeclaration,
 		namespaceImport: 'z',
-		moduleSpecifier: 'zod',
+		moduleSpecifier: config.zodImportPath,
 	})
 
 	enums.forEach((enumDef) => {
