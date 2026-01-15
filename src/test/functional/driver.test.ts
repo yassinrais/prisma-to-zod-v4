@@ -1,9 +1,8 @@
 import { getConfig, getDMMF } from '@prisma/sdk'
 import { describe, expect, test } from 'bun:test'
+import glob from 'fast-glob'
 import { readdirSync, readFile } from 'fs-extra'
 import path from 'path'
-import { execa } from 'execa'
-import glob from 'fast-glob'
 import { Project, QuoteKind } from 'ts-morph'
 import { SemicolonPreference } from 'typescript'
 import { configSchema, PrismaOptions } from '../../config'
@@ -79,7 +78,12 @@ const ftForDir = (dir: string) => async () => {
 		{ overwrite: true }
 	)
 
-	generateBarrelFile(dmmf.datamodel.models as never, indexFile, config, dmmf.datamodel.enums.length > 0)
+	generateBarrelFile(
+		dmmf.datamodel.models as never,
+		indexFile,
+		config,
+		dmmf.datamodel.enums.length > 0
+	)
 
 	indexFile.formatText({
 		indentSize: 2,
@@ -177,17 +181,20 @@ describe('Functional Tests', () => {
 	test('Zod Import Path - v3', ftForDir('zod-import-v3'))
 
 	test('Type Check Everything', async () => {
-		const typeCheckResults = await execa(
-			path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
-			[
-				'--strict',
-				'--noEmit',
-				'--esModuleInterop',
-				'--skipLibCheck',
-				...(await glob(`${__dirname}/*/expected/*.ts`)),
-			]
+		const tscPath = path.resolve(__dirname, '../../../node_modules/.bin/tsc')
+
+		const files = await glob(`${__dirname}/*/expected/*.ts`)
+
+		const proc = Bun.spawn(
+			[tscPath, '--strict', '--noEmit', '--esModuleInterop', '--skipLibCheck', ...files],
+			{
+				stdout: 'pipe',
+				stderr: 'pipe',
+			}
 		)
 
-		expect(typeCheckResults.exitCode).toBe(0)
+		const exitCode = await proc.exited
+
+		expect(exitCode).toBe(0)
 	})
 })

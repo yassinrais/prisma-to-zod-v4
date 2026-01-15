@@ -60,7 +60,6 @@
 		"@types/fs-extra": "^11.0.4",
 		"@types/node": "^25.0.3",
 		"dts-cli": "^2.0.5",
-		"execa": "^9.6.1",
 		"fast-glob": "^3.3.3",
 		"fs-extra": "^11.3.2",
 		"lefthook": "^2.0.12",
