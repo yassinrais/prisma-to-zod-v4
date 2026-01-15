@@ -7,7 +7,8 @@ export const getZodConstructor = (
 	getRelatedModelName = (name: string | DMMF.SchemaEnum | DMMF.OutputType | DMMF.SchemaArg) =>
 		name.toString(),
 	nativeType?: string | null,
-	config?: Config
+	config?: Partial<Config>,
+	defaultValue?: string | number | boolean
 ) => {
 	let zodType = 'z.unknown()'
 	const useCoerce = config?.useCoerce ?? false
@@ -168,9 +169,18 @@ export const getZodConstructor = (
 		zodType = computeCustomSchema(field.documentation) ?? zodType
 		extraModifiers.push(...computeModifiers(field.documentation))
 	}
+
+	if (defaultValue !== undefined) {
+		if (typeof defaultValue === 'string') {
+			const escaped = defaultValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+			extraModifiers.push(`default("${escaped}")`)
+		} else if (typeof defaultValue === 'boolean' || typeof defaultValue === 'number') {
+			extraModifiers.push(`default(${defaultValue})`)
+		}
+	}
+
 	if (!field.isRequired && field.type !== 'Json') extraModifiers.push('nullish()')
 
-	// Filter out empty strings and join
 	const validModifiers = extraModifiers
 		.filter((m) => m !== '')
 		.filter((m, i, l) => l.indexOf(m) === i)

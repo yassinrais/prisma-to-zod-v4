@@ -12,6 +12,89 @@ import { dotSlash, needsRelatedModel, useModelNames, writeArray } from './util'
 import { getJSDocs, computeCustomSchema } from './docs'
 import { getZodConstructor } from './types'
 
+export type FieldDefaults = Map<string, Map<string, string | number | boolean>>
+
+/**
+ * Parse @default() values from Prisma schema
+ * Only extracts simple literal values (string, number, boolean)
+ * Skips function defaults like cuid(), uuid(), now(), autoincrement()
+ */
+export const parseDefaultValues = (schemaPath: string): FieldDefaults => {
+	let schemaContent = ''
+	let resolvedPath = schemaPath
+
+	// Resolve file or directory
+	if (!existsSync(resolvedPath)) {
+		const withFile = path.join(schemaPath, 'schema.prisma')
+		const parentDir = path.dirname(schemaPath)
+		if (existsSync(withFile)) resolvedPath = withFile
+		else if (existsSync(parentDir)) resolvedPath = parentDir
+		else return new Map()
+	}
+
+	// Read schema content
+	const stat = statSync(resolvedPath)
+	if (stat.isFile()) schemaContent = readFileSync(resolvedPath, 'utf-8')
+	else if (stat.isDirectory()) {
+		const prismaFiles = findPrismaFiles(resolvedPath)
+		if (prismaFiles.length === 0) return new Map()
+		prismaFiles.forEach((filePath) => {
+			schemaContent += readFileSync(filePath, 'utf-8') + '\n'
+		})
+	}
+
+	const defaults = new Map<string, Map<string, string | number | boolean>>()
+	const modelRegex = /model\s+(\w+)\s*\{([\s\S]*?)\}/g
+	let modelMatch
+
+	while ((modelMatch = modelRegex.exec(schemaContent)) !== null) {
+		const modelName = modelMatch[1]
+		const modelBody = modelMatch[2]
+		const fields = new Map<string, string | number | boolean>()
+
+		const lines = modelBody.split('\n')
+		for (const line of lines) {
+			const trimmed = line.trim()
+			if (!trimmed || trimmed.startsWith('//')) continue
+
+			const parts = trimmed.split(/\s+/)
+			if (parts.length < 2) continue
+
+			const fieldName = parts[0]
+			const attributes = parts.slice(2).join(' ')
+
+			// Match @default(...) - capture the content inside parentheses
+			const defaultMatch = attributes.match(/@default\(([^)]+)\)/)
+			if (defaultMatch) {
+				const defaultValue = defaultMatch[1].trim()
+
+				// Skip function calls like cuid(), uuid(), now(), autoincrement(), dbgenerated(), etc.
+				if (/^[a-zA-Z_]+\(.*\)$/.test(defaultValue)) continue
+
+				// Parse the default value
+				if (defaultValue === 'true') {
+					fields.set(fieldName, true)
+				} else if (defaultValue === 'false') {
+					fields.set(fieldName, false)
+				} else if (/^-?\d+$/.test(defaultValue)) {
+					// Integer
+					fields.set(fieldName, parseInt(defaultValue, 10))
+				} else if (/^-?\d+\.\d+$/.test(defaultValue)) {
+					// Float
+					fields.set(fieldName, parseFloat(defaultValue))
+				} else if (/^".*"$/.test(defaultValue)) {
+					// String - remove quotes
+					fields.set(fieldName, defaultValue.slice(1, -1))
+				}
+			}
+		}
+
+		if (fields.size > 0) defaults.set(modelName, fields)
+	}
+
+	return defaults
+}
+
 export const parseNativeTypes = (schemaPath: string): Map<string, Map<string, string>> => {
 	let schemaContent = ''
 	let resolvedPath = schemaPath
@@ -240,6 +323,9 @@ export const generateSchemaForModel = (
 	const nativeTypes = parseNativeTypes(schemaPath)
 	const modelNativeTypes = nativeTypes.get(model.name) || new Map()
 
+	const defaultValues = config.useDefaultValues ? parseDefaultValues(schemaPath) : new Map()
+	const modelDefaults = defaultValues.get(model.name) || new Map()
+
 	sourceFile.addVariableStatement({
 		declarationKind: VariableDeclarationKind.Const,
 		isExported: true,
@@ -256,9 +342,10 @@ export const generateSchemaForModel = (
 								.forEach((field) => {
 									writeArray(writer, getJSDocs(field.documentation))
 									const nativeType = modelNativeTypes.get(field.name)
+									const defaultValue = modelDefaults.get(field.name)
 									writer
 										.write(
-											`${field.name}: ${getZodConstructor(field, undefined, nativeType, config)}`
+											`${field.name}: ${getZodConstructor(field, undefined, nativeType, config, defaultValue)}`
 										)
 										.write(',')
 										.newLine()

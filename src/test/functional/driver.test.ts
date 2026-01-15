@@ -8,9 +8,6 @@ import { SemicolonPreference } from 'typescript'
 import { configSchema, PrismaOptions } from '../../config'
 import { generateBarrelFile, generateEnumsFile, populateModelFile } from '../../generator'
 
-/**
- * Read all .prisma files from a directory and combine them
- */
 const readAllPrismaFiles = async (prismaDir: string): Promise<string> => {
 	const files = readdirSync(prismaDir).filter((f) => f.endsWith('.prisma'))
 	let combined = ''
@@ -45,7 +42,6 @@ const ftForDir = (dir: string) => async () => {
 		},
 	})
 
-	// Read all .prisma files (handles multiple schema files)
 	const datamodel = await readAllPrismaFiles(schemaDir)
 
 	const dmmf = await getDMMF({
@@ -179,6 +175,7 @@ describe('Functional Tests', () => {
 	test('Min Length Only', ftForDir('minlength-only'))
 	test('Zod Import Path - v4', ftForDir('zod-import-v4'))
 	test('Zod Import Path - v3', ftForDir('zod-import-v3'))
+	test('Default Values', ftForDir('default-values'))
 
 	test('Type Check Everything', async () => {
 		const tscPath = path.resolve(__dirname, '../../../node_modules/.bin/tsc')

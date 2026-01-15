@@ -16,6 +16,7 @@ export const configSchema = z.object({
 	useMinLength: configBoolean.default(false),
 	useTrimStrings: configBoolean.default(false),
 	usePrefaultEmptyString: configBoolean.default(false),
+	useDefaultValues: configBoolean.default(false),
 })
 
 export type Config = z.infer<typeof configSchema>

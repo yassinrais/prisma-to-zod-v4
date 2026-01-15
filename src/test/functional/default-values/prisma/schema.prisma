@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = ""
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = ".client"
+}
+
+generator zod {
+  provider         = "zod-prisma"
+  output           = "../actual/"
+  useDefaultValues = "true"
+}
+
+model Settings {
+  id           String  @id @default(cuid())
+  isActive     Boolean @default(true)
+  isPublic     Boolean @default(false)
+  retryCount   Int     @default(3)
+  threshold    Float   @default(0.5)
+  status       String  @default("pending")
+  emptyDefault String  @default("")
+  noDefault    String
+  optionalWithDefault Int? @default(10)
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  views     Int      @default(0)
+  rating    Float    @default(4.5)
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

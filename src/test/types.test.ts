@@ -100,7 +100,7 @@ describe('types Package', () => {
 
 		const constructor = getZodConstructor(field, undefined, undefined, {
 			useMinLength: true,
-			useTrimStrings: true
+			useTrimStrings: true,
 		})
 
 		expect(constructor).toBe('z.string().trim().min(1)')
@@ -124,7 +124,7 @@ describe('types Package', () => {
 		const constructor = getZodConstructor(field, undefined, undefined, {
 			useMinLength: true,
 			useTrimStrings: true,
-			usePrefaultEmptyString: true
+			usePrefaultEmptyString: true,
 		})
 
 		expect(constructor).toBe('z.string().trim().min(1).prefault("")')
@@ -146,7 +146,7 @@ describe('types Package', () => {
 		}
 
 		const constructor = getZodConstructor(field, undefined, undefined, {
-			useTrimStrings: true
+			useTrimStrings: true,
 		})
 
 		expect(constructor).toBe('z.string()')
@@ -189,7 +189,7 @@ describe('types Package', () => {
 
 		const constructor = getZodConstructor(field, undefined, 'VarChar(255)', {
 			useMinLength: true,
-			useTrimStrings: true
+			useTrimStrings: true,
 		})
 
 		expect(constructor).toBe('z.string().max(255).trim().min(1)')
@@ -213,7 +213,7 @@ describe('types Package', () => {
 		const constructor = getZodConstructor(field, undefined, 'VarChar(255)', {
 			useMinLength: true,
 			useTrimStrings: true,
-			usePrefaultEmptyString: true
+			usePrefaultEmptyString: true,
 		})
 
 		expect(constructor).toBe('z.string().max(255).trim().min(1).prefault("")')
@@ -237,5 +237,185 @@ describe('types Package', () => {
 		const constructor = getZodConstructor(field, undefined, 'Uuid', { useMinLength: true })
 
 		expect(constructor).toBe('z.uuid()')
+	})
+
+	test('default value - boolean true', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'isActive',
+			type: 'Boolean',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, true)
+
+		expect(constructor).toBe('z.boolean().default(true)')
+	})
+
+	test('default value - boolean false', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'isActive',
+			type: 'Boolean',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, false)
+
+		expect(constructor).toBe('z.boolean().default(false)')
+	})
+
+	test('default value - string', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'status',
+			type: 'String',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, 'pending')
+
+		expect(constructor).toBe('z.string().default("pending")')
+	})
+
+	test('default value - string with special characters', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'message',
+			type: 'String',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, 'Hello "World"')
+
+		expect(constructor).toBe('z.string().default("Hello \\"World\\"")')
+	})
+
+	test('default value - integer', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'count',
+			type: 'Int',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, 0)
+
+		expect(constructor).toBe('z.number().int().default(0)')
+	})
+
+	test('default value - float', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'rating',
+			type: 'Float',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, 4.5)
+
+		expect(constructor).toBe('z.number().default(4.5)')
+	})
+
+	test('default value - empty string', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'bio',
+			type: 'String',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, '')
+
+		expect(constructor).toBe('z.string().default("")')
+	})
+
+	test('default value - no default provided', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: false,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: true,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'name',
+			type: 'String',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {})
+
+		expect(constructor).toBe('z.string()')
+	})
+
+	test('default value - optional field with default', () => {
+		const field: DMMF.Field = {
+			hasDefaultValue: true,
+			isGenerated: false,
+			isId: false,
+			isList: false,
+			isRequired: false,
+			isUnique: false,
+			isReadOnly: false,
+			isUpdatedAt: false,
+			kind: 'scalar',
+			name: 'count',
+			type: 'Int',
+		}
+
+		const constructor = getZodConstructor(field, undefined, undefined, {}, 10)
+
+		expect(constructor).toBe('z.number().int().default(10).nullish()')
 	})
 })
