@@ -1,6 +1,10 @@
 import type { DMMF } from '@prisma/generator-helper'
 import type { Config } from './config'
-import { computeCustomSchema, computeModifiers } from './docs'
+import {
+	computeCustomSchema,
+	computeModifiersExcludingStandalone,
+	extractStandaloneValidator,
+} from './docs'
 
 export const getZodConstructor = (
 	field: DMMF.Field,
@@ -166,8 +170,16 @@ export const getZodConstructor = (
 
 	if (field.isList) extraModifiers.push('array()')
 	if (field.documentation) {
-		zodType = computeCustomSchema(field.documentation) ?? zodType
-		extraModifiers.push(...computeModifiers(field.documentation))
+		const customSchema = computeCustomSchema(field.documentation)
+		const standaloneValidator = extractStandaloneValidator(field.documentation)
+
+		if (customSchema) {
+			zodType = customSchema
+		} else if (standaloneValidator && field.type === 'String') {
+			zodType = `z.${standaloneValidator}`
+		}
+
+		extraModifiers.push(...computeModifiersExcludingStandalone(field.documentation))
 	}
 
 	if (defaultValue !== undefined) {

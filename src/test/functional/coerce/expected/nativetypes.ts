@@ -58,4 +58,6 @@ export const NativeTypesModel = z.object({
 	status: statusSchema,
 	created: z.coerce.date(),
 	updated: z.coerce.date(),
+	website: z.url().nullish(),
+	shortDesc: z.coerce.string().max(100).nullish(),
 })

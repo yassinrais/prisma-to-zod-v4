@@ -43,3 +43,28 @@ export const computeCustomSchema = (docString: string) => {
 export const computeModifiers = (docString: string) => {
 	return getZodDocElements(docString).filter((each) => !each.startsWith("custom("))
 }
+
+// Zod v4 standalone string validators that replace z.string()
+const STANDALONE_STRING_VALIDATORS = [
+	'url', 'uuid', 'email', 'ip', 'datetime', 'date', 'time',
+	'base64', 'base64url', 'cuid', 'cuid2', 'ulid', 'emoji',
+	'nanoid', 'jwt', 'cidr', 'ipv4', 'ipv6', 'duration'
+]
+
+export const extractStandaloneValidator = (docString: string): string | null => {
+	const modifiers = getZodDocElements(docString)
+	for (const modifier of modifiers) {
+		const match = modifier.match(/^(\w+)\(/)
+		if (match && STANDALONE_STRING_VALIDATORS.includes(match[1])) {
+			return modifier // e.g., "url()" or "uuid()"
+		}
+	}
+	return null
+}
+
+export const computeModifiersExcludingStandalone = (docString: string) => {
+	const standalone = extractStandaloneValidator(docString)
+	return getZodDocElements(docString).filter(
+		(each) => !each.startsWith("custom(") && each !== standalone
+	)
+}

@@ -75,4 +75,11 @@ model NativeTypes {
   // Timestamps
   created DateTime @default(now())
   updated DateTime @updatedAt
+
+  // Custom @zod annotations
+  /// @zod.url()
+  website String?
+
+  /// @zod.max(100)
+  shortDesc String?
 }

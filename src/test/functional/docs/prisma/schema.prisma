@@ -29,4 +29,13 @@ model Post {
   /// The actual contents of the post.
   /// @zod.max(10240)
   contents String
+
+  /// @zod.url()
+  website String?
+
+  /// @zod.email()
+  email String?
+
+  /// @zod.url().max(2048)
+  longUrl String?
 }
