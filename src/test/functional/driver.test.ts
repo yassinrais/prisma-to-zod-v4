@@ -1,6 +1,5 @@
 import { getConfig, getDMMF } from '@prisma/sdk'
 import { describe, expect, test } from 'bun:test'
-import glob from 'fast-glob'
 import { readdirSync, readFile } from 'fs-extra'
 import path from 'path'
 import { Project, QuoteKind } from 'ts-morph'
@@ -179,16 +178,12 @@ describe('Functional Tests', () => {
 
 	test('Type Check Everything', async () => {
 		const tscPath = path.resolve(__dirname, '../../../node_modules/.bin/tsc')
+		const tsconfigPath = path.resolve(__dirname, 'tsconfig.typecheck.json')
 
-		const files = await glob(`${__dirname}/*/expected/*.ts`)
-
-		const proc = Bun.spawn(
-			[tscPath, '--strict', '--noEmit', '--esModuleInterop', '--skipLibCheck', ...files],
-			{
-				stdout: 'pipe',
-				stderr: 'pipe',
-			}
-		)
+		const proc = Bun.spawn([tscPath, '--project', tsconfigPath], {
+			stdout: 'pipe',
+			stderr: 'pipe',
+		})
 
 		const exitCode = await proc.exited
 
