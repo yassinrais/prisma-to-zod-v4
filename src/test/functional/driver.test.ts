@@ -177,16 +177,10 @@ describe('Functional Tests', () => {
 	test('Default Values', ftForDir('default-values'))
 
 	test('Type Check Everything', async () => {
-		const tscPath = path.resolve(__dirname, '../../../node_modules/.bin/tsc')
 		const tsconfigPath = path.resolve(__dirname, 'tsconfig.typecheck.json')
 
-		const proc = Bun.spawn([tscPath, '--project', tsconfigPath], {
-			stdout: 'pipe',
-			stderr: 'pipe',
-		})
+		const proc = await Bun.$`bunx --bun tsc --project ${tsconfigPath}`.quiet().nothrow()
 
-		const exitCode = await proc.exited
-
-		expect(exitCode).toBe(0)
+		expect(proc.exitCode).toBe(0)
 	})
 })
